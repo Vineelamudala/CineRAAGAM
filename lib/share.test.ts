@@ -18,6 +18,11 @@ describe('buildShareText', () => {
     );
   });
 
+  it('adds the streak when it is longer than one day', () => {
+    expect(buildShareText({ challengeNumber: 9, results: ['correct'], points: 3, streak: 4 })).toContain('🔥 4-day streak');
+    expect(buildShareText({ challengeNumber: 9, results: ['correct'], points: 3, streak: 1 })).not.toContain('streak');
+  });
+
   it('never contains the movie title', () => {
     const text = buildShareText({ challengeNumber: 24, results: ['correct'], points: 3 });
     expect(text.toLowerCase()).not.toContain('jersey');

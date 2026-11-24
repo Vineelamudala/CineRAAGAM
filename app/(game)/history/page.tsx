@@ -1,17 +1,18 @@
 import type { Metadata } from 'next';
-import { History } from 'lucide-react';
-import { PlaceholderPage } from '@/components/PlaceholderPage';
+import { HistoryView } from '@/components/HistoryView';
 
 export const metadata: Metadata = { title: 'My History' };
 
 export default function HistoryPage() {
   return (
-    <PlaceholderPage
-      icon={History}
-      title="Your game history"
-      copy="Every daily challenge you have played: the movie, how many clues you needed and the points you earned. Missed days can be played in Time Travel."
-      emptyTitle="Your history will appear here"
-      emptyText="This section will be connected when we add the database and real daily challenges."
-    />
+    <section className="placeholder-page">
+      <div className="eyebrow"><span className="eyebrow-line" aria-hidden="true" /> CINERAAGAM</div>
+      <h1>Your game history</h1>
+      <p className="welcome-copy">
+        Every daily challenge since you started: the movie, how you did and the points you earned.
+        Missed days can still be played in Time Travel.
+      </p>
+      <HistoryView />
+    </section>
   );
 }

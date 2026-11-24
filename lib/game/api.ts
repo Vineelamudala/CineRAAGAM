@@ -38,6 +38,41 @@ export type PastChallenge = {
   points: number | null;
 };
 
+export type MyStats = {
+  current_streak: number;
+  best_streak: number;
+  played: number;
+  won: number;
+  win_rate: number | null;
+  total_points: number;
+  week_points: number;
+  week_rank: number | null;
+  distribution: { '1': number; '2': number; '3': number; missed: number };
+  week: { date: string; is_today: boolean; has_challenge: boolean; status: 'playing' | 'won' | 'lost' | null }[];
+};
+
+export type LeaderboardPeriod = 'week' | 'month' | 'all';
+export type Leaderboard = {
+  period: LeaderboardPeriod;
+  from: string | null;
+  to: string;
+  total: number;
+  rows: { rank: number; name: string; points: number; solved: number; is_me: boolean }[];
+  me: { rank: number; name: string; points: number; solved: number } | null;
+};
+
+export type HistoryEntry = {
+  date: string;
+  number: number;
+  status: 'playing' | 'won' | 'lost' | null;
+  mode: 'daily' | 'time_travel' | null;
+  points: number | null;
+  solved_on_clue: number | null;
+  clues_used: number;
+  title: string | null;
+  year: number | null;
+};
+
 export class GameApiError extends Error {
   constructor(message: string, public code?: string) {
     super(message);
@@ -65,6 +100,24 @@ export async function listPastChallenges(supabase: SupabaseClient, limit = 60, o
   const { data, error } = await supabase.rpc('list_past_challenges', { p_limit: limit, p_offset: offset });
   if (error) fail(error);
   return (data as PastChallenge[]) ?? [];
+}
+
+export async function getMyStats(supabase: SupabaseClient): Promise<MyStats> {
+  const { data, error } = await supabase.rpc('get_my_stats');
+  if (error) fail(error);
+  return data as MyStats;
+}
+
+export async function getLeaderboard(supabase: SupabaseClient, period: LeaderboardPeriod, limit = 50): Promise<Leaderboard> {
+  const { data, error } = await supabase.rpc('get_leaderboard', { p_period: period, p_limit: limit });
+  if (error) fail(error);
+  return data as Leaderboard;
+}
+
+export async function getMyHistory(supabase: SupabaseClient, limit = 30, offset = 0): Promise<HistoryEntry[]> {
+  const { data, error } = await supabase.rpc('get_my_history', { p_limit: limit, p_offset: offset });
+  if (error) fail(error);
+  return (data as HistoryEntry[]) ?? [];
 }
 
 /** Short-lived URL for an unlocked clue (Storage RLS refuses locked clues). */

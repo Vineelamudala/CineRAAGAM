@@ -10,6 +10,7 @@ import { fetchCatalog, getChallenge, submitGuess, type ChallengeState } from '@/
 import { CLUES, clueInfo, type ClueNumber } from '@/lib/game/rules';
 import { useNow } from '@/lib/hooks/useNow';
 import { usePlayer } from '@/lib/player/PlayerProvider';
+import { useStats } from '@/lib/player/StatsProvider';
 import type { MovieOption } from '@/lib/search/movies';
 import { getBrowserSupabase } from '@/lib/supabase/browser';
 import { istDateString } from '@/lib/time/ist';
@@ -26,6 +27,7 @@ const formatDate = (iso: string) =>
 /** The game card. `date` (YYYY-MM-DD) plays a past day (Time Travel); omitted = today. */
 export function DailyGame({ date }: { date?: string }) {
   const player = usePlayer();
+  const { refresh: refreshStats } = useStats();
   const [load, setLoad] = useState<Load>({ kind: 'loading' });
   const [catalog, setCatalog] = useState<MovieOption[] | null>(null);
   const [busy, setBusy] = useState(false);
@@ -60,6 +62,7 @@ export function DailyGame({ date }: { date?: string }) {
       setLoad({ kind: 'ready', state: next });
       setListenClue(null);
       const p = next.play!;
+      if (p.status !== 'playing') refreshStats(); // streak, week strip and rank change
       if (p.status === 'won') setMessage('That’s correct! You recognised the movie.');
       else if (p.status === 'lost') setMessage('');
       else {

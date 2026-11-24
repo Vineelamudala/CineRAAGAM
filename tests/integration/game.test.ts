@@ -101,6 +101,26 @@ describe('playing today’s challenge through the API', () => {
     expect((past as { date: string }[]).some(p => p.date >= istDate(0))).toBe(false);
   });
 
+  it('stats, leaderboard and history work through the API (incl. read-only rules)', async () => {
+    const player = await newPlayer();
+    await player.rpc('set_display_name', { p_name: `Api ${Math.random().toString(36).slice(2, 7)}` });
+    await player.rpc('submit_guess', { p_date: istDate(0), p_clue: 1, p_movie_id: answerId });
+
+    const stats = await player.rpc('get_my_stats');
+    expect(stats.error).toBeNull();
+    expect(stats.data).toMatchObject({ current_streak: 1, played: 1, won: 1, total_points: 3 });
+
+    for (const period of ['week', 'month', 'all']) {
+      const board = await player.rpc('get_leaderboard', { p_period: period });
+      expect(board.error, period).toBeNull();
+      expect(board.data.me, period).toMatchObject({ points: 3 });
+    }
+
+    const history = await player.rpc('get_my_history');
+    expect(history.error).toBeNull();
+    expect(history.data[0]).toMatchObject({ date: istDate(0), status: 'won', points: 3, title: answerTitle });
+  });
+
   it('past days are playable as time travel', async () => {
     const player = await newPlayer();
     const { data, error } = await player.rpc('submit_guess', { p_date: istDate(-1), p_clue: 1, p_movie_id: null });

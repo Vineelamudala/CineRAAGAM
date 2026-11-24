@@ -18,12 +18,15 @@ Free and open-source stack, self-hostable, no player logins.
 - One guess per clue. A guess must be picked from the autocomplete list.
 - A wrong guess or a skip unlocks the next clue. Replaying audio is free.
 - A correct guess ends the game. After three misses the movie and main cast are revealed.
-- **Streak** = consecutive days (IST) on which you solved the daily movie.
+- **Streak** = consecutive challenge days (IST) on which you solved the daily movie.
+  A day with no published challenge never breaks a streak, and today doesn't
+  break it until you lose (or midnight passes unsolved).
 - A new challenge starts at **00:00 IST**. A daily game must be finished that day:
   after midnight an unfinished game turns into a Time Travel game (0 leaderboard
   points, streak not extended), which you can still finish for fun.
 - **Leaderboards:** weekly (resets Monday 00:00 IST), monthly and all-time, by points.
-  Ties go to more days solved, then to whoever reached the total first.
+  Ties go to more days solved, then to whoever reached the total first. Only named,
+  non-hidden players appear; admins are left out.
 - **Time Travel:** play past days for fun. It shows "would-have" points in your
   history but never counts toward leaderboards or streaks.
 - **No login:** players get a silent anonymous identity and only choose a display
@@ -177,10 +180,9 @@ utilities on the same element. Retire them as each component is rebuilt.
   (enforced by RLS), operator CLI, movies/cast editor, in-browser clip cutter and
   re-encoder (5–20 s, metadata stripped), scheduling with a played-challenge lock,
   player moderation.
-- [ ] **Phase 4 — Progress:** streaks, statistics, history, leaderboards, sharing.
+- [x] **Phase 4 — Progress:** streaks (in challenge days), statistics with a
+  solved-on chart, My History, weekly/monthly/all-time leaderboards, live sidebar
+  and right-rail stats, streak in the share text.
 - [ ] **Phase 5 — Time Travel extras** (calendar view, filters).
 - [ ] **Phase 6 — Polish:** PWA install, accessibility and responsive pass, audio visualiser.
 - [ ] **Phase 7 — Production:** Docker Compose (app + self-hosted Supabase + Caddy), backups.
-
-> The streak, rank and win-rate numbers in the sidebar and right rail are still
-> placeholders until Phase 4.

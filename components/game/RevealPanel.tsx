@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import { Check, Share2, SkipForward, Trophy, X } from 'lucide-react';
 import type { ChallengeState } from '@/lib/game/api';
+import { useStats } from '@/lib/player/StatsProvider';
 import { buildShareText } from '@/lib/share';
 
 type Props = { state: ChallengeState };
 
 export function RevealPanel({ state }: Props) {
   const [shareStatus, setShareStatus] = useState('');
+  const { stats } = useStats();
   const play = state.play!;
   const reveal = state.reveal!;
   const won = play.status === 'won';
@@ -20,6 +22,7 @@ export function RevealPanel({ state }: Props) {
       challengeNumber: state.number,
       results: state.guesses.map(g => g.result),
       points,
+      streak: play.mode === 'daily' && won ? stats?.current_streak : undefined,
       url: window.location.origin,
     });
     try {

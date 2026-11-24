@@ -199,6 +199,19 @@ ol.clip-progress {
 .reveal-icon { background: var(--panel-warm); color: var(--tone-200); box-shadow: 0 0 30px var(--foil-glow); }
 .reveal-panel h2 { color: #fff; }
 
+/* ---- Week strips (live results) ---- */
+/* The prototype painted Monday/Tuesday as solved; neutralise that and colour by real result. */
+.week-days > div:nth-child(-n+2) i { color: inherit; border-color: inherit; background: transparent; }
+.week-days > div i { border-color: hsl(var(--accent-h) var(--a-sat-dim) 24%); }
+.week-days > div.won i { background: #18251c; border-color: #3b5944; color: var(--color-success); }
+.week-days > div.lost i, .week-days > div.open i { color: #c98a92; border-color: #4a2a31; }
+.streak-days span.missed { border-color: #4a2a31; color: #c98a92; }
+.streak-days span.today { border-color: var(--tone-200); color: var(--tone-100); }
+
+/* ---- Leaderboard & stats ---- */
+.rank-medal { background: var(--foil); color: var(--tone-ink); font-weight: 700; box-shadow: 0 0 14px var(--foil-glow); }
+.dist-bar { display: block; min-width: 0; background: var(--tone-300); }
+
 /* ---- Misc touches ---- */
 .footer-heart { color: var(--tone-300); }
 .quote-card { background: radial-gradient(ellipse at 100% 0%, hsl(var(--accent-h) var(--a-sat-dim) 16%) 0%, hsl(var(--accent-h) var(--a-sat-dim) 8%) 45%, var(--panel-deep) 85%); }

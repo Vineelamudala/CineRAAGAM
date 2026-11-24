@@ -1,10 +1,9 @@
 import Link from 'next/link';
-import { AudioLines, Check, Flame, UserRound, X } from 'lucide-react';
+import { AudioLines, Flame, UserRound, X } from 'lucide-react';
 import type { Ref } from 'react';
-import { DEMO_STATS } from '@/lib/demo';
+import { SidebarWeek } from '@/components/WeekStrip';
+import type { MyStats } from '@/lib/game/api';
 import { NAV_ITEMS, isActiveNav } from '@/lib/nav';
-
-const WEEK = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 type Props = {
   pathname: string;
@@ -14,9 +13,10 @@ type Props = {
   onClose: () => void;
   closeRef: Ref<HTMLButtonElement>;
   playerName: string | null;
+  stats: MyStats | null;
 };
 
-export function Sidebar({ pathname, open, inert, onNavigate, onClose, closeRef, playerName }: Props) {
+export function Sidebar({ pathname, open, inert, onNavigate, onClose, closeRef, playerName, stats }: Props) {
   return (
     <aside className={`sidebar ${open ? 'sidebar-open' : ''}`} inert={inert}>
       <div className="brand-lockup">
@@ -44,13 +44,11 @@ export function Sidebar({ pathname, open, inert, onNavigate, onClose, closeRef, 
       <div className="sidebar-bottom">
         <div className="streak-card">
           <div className="streak-top"><span className="streak-icon"><Flame size={17} aria-hidden="true" /></span><span>YOUR STREAK</span></div>
-          <div className="streak-number">{String(DEMO_STATS.streak).padStart(2, '0')} <small>days</small></div>
-          <div className="streak-note">Keep the rhythm going.</div>
-          <div className="streak-days" aria-hidden="true">
-            {WEEK.map((d, i) => (
-              <span key={i} className={i < DEMO_STATS.weekDone ? 'done' : ''}>{i < DEMO_STATS.weekDone ? <Check size={12} /> : d}</span>
-            ))}
+          <div className="streak-number">{stats ? String(stats.current_streak).padStart(2, '0') : '––'} <small>{stats?.current_streak === 1 ? 'day' : 'days'}</small></div>
+          <div className="streak-note">
+            {!stats ? 'Loading…' : stats.current_streak > 0 ? 'Keep the rhythm going.' : stats.best_streak > 0 ? `Best so far: ${stats.best_streak}. Start a new run today.` : 'Solve today’s movie to start a streak.'}
           </div>
+          <SidebarWeek week={stats?.week} />
         </div>
         <div className="profile-row">
           <div className="avatar" aria-hidden="true"><UserRound size={17} /></div>
