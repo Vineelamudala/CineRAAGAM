@@ -4,6 +4,6 @@
   "description": "A daily Telugu cinema music challenge",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0b0a10",
-  "theme_color": "#0b0a10"
+  "background_color": "#030304",
+  "theme_color": "#030304"
 }

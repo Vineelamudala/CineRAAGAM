@@ -1,0 +1,9 @@
+# Normalise line endings so Docker/shell scripts work everywhere
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary
+*.mp3 binary
+*.ogg binary
+*.webm binary
+*.woff2 binary
