@@ -11,10 +11,10 @@ export function Countdown() {
 
   return (
     <div className="countdown-card">
-      <div className="countdown-label"><Clock3 size={14} aria-hidden="true" /> NEXT CHALLENGE IN</div>
+      <div className="countdown-label"><Clock3 size={14} aria-hidden="true" /> NEXT SHOW IN</div>
       {/* Not a live region: announcing every second would be noisy. */}
       <div className="countdown-time" role="timer" aria-label={`Next challenge at midnight India time, in ${text}`}>{text}</div>
-      <div className="countdown-foot">A new movie, every day <Sparkles size={13} aria-hidden="true" /></div>
+      <div className="countdown-foot">A new movie every midnight (IST) <Sparkles size={13} aria-hidden="true" /></div>
     </div>
   );
 }

@@ -4,17 +4,24 @@
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
 @import './styles/legacy.css';
+@import './styles/cinema.css';
+
+/* Accent colour for the whole app. Every accent shade (text, glows, borders,
+   tinted near-black panels) is derived from these two values:
+     --accent-h  hue in degrees (40 = gold; the original prototype was 260 = violet)
+     --accent-s  saturation multiplier (1 = as designed, lower = more muted) */
+:root { --accent-h: 40; --accent-s: 0.8; }
 
 /* Design tokens — use as Tailwind classes, e.g. bg-panel, text-accent, border-line. */
 @theme inline {
-  --color-bg: #030304;
-  --color-panel: #0b0b0e;
-  --color-panel-2: #111115;
-  --color-line: #242329;
-  --color-muted: #898692;
-  --color-text: #f6f3fb;
-  --color-accent: #b49aff;      /* primary purple */
-  --color-accent-strong: #8f6ce8;
+  --color-bg: hsl(calc(var(--accent-h) - 20) calc(14.3% * var(--accent-s)) 1.4%);
+  --color-panel: hsl(calc(var(--accent-h) - 20) calc(12.0% * var(--accent-s)) 4.9%);
+  --color-panel-2: hsl(calc(var(--accent-h) - 20) calc(10.5% * var(--accent-s)) 7.5%);
+  --color-line: hsl(calc(var(--accent-h) - 10) calc(7.9% * var(--accent-s)) 14.9%);
+  --color-muted: hsl(calc(var(--accent-h) - 5) calc(5.2% * var(--accent-s)) 54.9%);
+  --color-text: hsl(calc(var(--accent-h) + 3) calc(50.0% * var(--accent-s)) 96.9%);
+  --color-accent: hsl(calc(var(--accent-h) - 5) calc(100.0% * var(--accent-s)) 80.2%);      /* primary purple */
+  --color-accent-strong: hsl(calc(var(--accent-h) - 3) calc(72.9% * var(--accent-s)) 66.7%);
   --color-cyan: #67e8f9;        /* secondary accent */
   --color-cyan-strong: #22c5dc;
   --color-gold: #f3bd70;
@@ -29,22 +36,22 @@
 /* ---- Phase 0 additions (new markup only) ---- */
 
 /* Clue stepper is now an ordered list. */
-ol.clip-progress { list-style: none; padding: 0; }
+ol.clip-progress { list-style: none; } /* padding set in styles/cinema.css (film strip) */
 
 /* Live regions stay mounted for screen readers but take no space when empty. */
 .feedback-message:empty { margin: 0; }
 
 /* Clue difficulty badge (replaces the old difficulty dropdown). */
-.clue-badge strong { font: 600 10px var(--font-dm-sans), sans-serif; letter-spacing: 0; color: #d8caff; }
+.clue-badge strong { font: 600 10px var(--font-dm-sans), sans-serif; letter-spacing: 0; color: hsl(calc(var(--accent-h) - 4) calc(100.0% * var(--accent-s)) 89.6%); }
 
 /* Autocomplete listbox options (accessible combobox). */
 .suggestions [role='listbox'] { list-style: none; margin: 0; padding: 0; max-height: 280px; overflow-y: auto; }
-.suggestions [role='option'] { padding: 10px 13px; border-bottom: 1px solid #27252d; color: #e4deed; font-size: 11px; cursor: pointer; display: flex; justify-content: space-between; gap: 10px; }
+.suggestions [role='option'] { padding: 10px 13px; border-bottom: 1px solid hsl(calc(var(--accent-h) - 5) calc(9.8% * var(--accent-s)) 16.1%); color: hsl(calc(var(--accent-h) + 4) calc(29.4% * var(--accent-s)) 90.0%); font-size: 11px; cursor: pointer; display: flex; justify-content: space-between; gap: 10px; }
 .suggestions [role='option']:last-child { border-bottom: 0; }
 .suggestions [role='option'][aria-selected='true'],
-.suggestions [role='option']:hover { background: #201a2b; }
-.suggestions [role='option'] small { color: #7d7887; font: 9px var(--font-dm-mono), monospace; }
-.suggestions .no-match { padding: 10px 13px; color: #8a8494; font-size: 11px; }
+.suggestions [role='option']:hover { background: hsl(calc(var(--accent-h) + 1) calc(24.6% * var(--accent-s)) 13.5%); }
+.suggestions [role='option'] small { color: hsl(var(--accent-h) calc(5.9% * var(--accent-s)) 50.0%); font: 9px var(--font-dm-mono), monospace; }
+.suggestions .no-match { padding: 10px 13px; color: hsl(calc(var(--accent-h) + 2) calc(7.0% * var(--accent-s)) 54.9%); font-size: 11px; }
 
 /* Mobile sidebar backdrop. */
 .sidebar-backdrop { display: none; }
@@ -54,16 +61,16 @@ ol.clip-progress { list-style: none; padding: 0; }
 
 /* Links styled like the original buttons. */
 a.nav-item, .bottom-strip > a { text-decoration: none; }
-.bottom-strip > a { display: flex; align-items: center; gap: 10px; text-align: left; background: transparent; border: 0; border-left: 1px solid #2a2730; padding: 5px 15px; color: #a99fb6; }
+.bottom-strip > a { display: flex; align-items: center; gap: 10px; text-align: left; background: transparent; border: 0; border-left: 1px solid hsl(var(--accent-h) calc(10.3% * var(--accent-s)) 17.1%); padding: 5px 15px; color: hsl(calc(var(--accent-h) + 6) calc(13.6% * var(--accent-s)) 66.9%); }
 .bottom-strip > a > span { display: grid; gap: 3px; flex: 1; }
-.bottom-strip > a strong { color: #f1edf6; font-size: 10px; }
-.bottom-strip > a small { color: #827b8b; font-size: 8px; }
-.bottom-strip > a b { color: #b49aff; font-weight: 400; }
-.bottom-strip > a svg { color: #b49aff; }
-@media (hover: hover) { .bottom-strip > a:hover strong, .bottom-strip > a:hover b { color: #c4afff; } }
+.bottom-strip > a strong { color: hsl(calc(var(--accent-h) + 7) calc(33.3% * var(--accent-s)) 94.7%); font-size: 10px; }
+.bottom-strip > a small { color: hsl(calc(var(--accent-h) + 6) calc(6.5% * var(--accent-s)) 51.4%); font-size: 8px; }
+.bottom-strip > a b { color: hsl(calc(var(--accent-h) - 5) calc(100.0% * var(--accent-s)) 80.2%); font-weight: 400; }
+.bottom-strip > a svg { color: hsl(calc(var(--accent-h) - 5) calc(100.0% * var(--accent-s)) 80.2%); }
+@media (hover: hover) { .bottom-strip > a:hover strong, .bottom-strip > a:hover b { color: hsl(calc(var(--accent-h) - 4) calc(100.0% * var(--accent-s)) 84.3%); } }
 @media (max-width: 1150px) { .bottom-strip > a:first-of-type { border-left: 0; padding-left: 0; } }
 @media (max-width: 620px) {
-  .bottom-strip > a, .bottom-strip > a:first-of-type { border-left: 0; border-top: 1px solid #292630; padding: 12px 0 5px; }
+  .bottom-strip > a, .bottom-strip > a:first-of-type { border-left: 0; border-top: 1px solid hsl(calc(var(--accent-h) - 2) calc(11.6% * var(--accent-s)) 16.9%); padding: 12px 0 5px; }
 }
 .rail-link { display: block; text-decoration: none; }
 .placeholder-page .submit-button { display: inline-flex; align-items: center; text-decoration: none; }
