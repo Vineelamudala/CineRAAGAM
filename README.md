@@ -183,6 +183,6 @@ utilities on the same element. Retire them as each component is rebuilt.
 - [x] **Phase 4 — Progress:** streaks (in challenge days), statistics with a
   solved-on chart, My History, weekly/monthly/all-time leaderboards, live sidebar
   and right-rail stats, streak in the share text.
-- [ ] **Phase 5 — Time Travel extras** (calendar view, filters).
+- [x] **Phase 5 — Time Travel extras:** month calendar with results, filters (not played / in progress / solved / missed), list view, "Surprise me".
 - [ ] **Phase 6 — Polish:** PWA install, accessibility and responsive pass, audio visualiser.
 - [ ] **Phase 7 — Production:** Docker Compose (app + self-hosted Supabase + Caddy), backups.

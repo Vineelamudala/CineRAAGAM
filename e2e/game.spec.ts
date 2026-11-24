@@ -124,6 +124,25 @@ test.describe('time travel', () => {
     await expect(page.getByText('POINTS · FOR FUN')).toBeVisible();
   });
 
+  test('calendar, filters, list view and "surprise me"', async ({ page }) => {
+    await page.goto('/time-travel');
+    await skipName(page);
+    await expect(page.getByRole('region', { name: 'Calendar' })).toBeVisible();
+    const days = page.getByRole('region', { name: 'Calendar' }).getByRole('link');
+    await expect(days.first()).toBeVisible();
+    expect(await days.count()).toBeGreaterThanOrEqual(3);
+
+    await page.getByRole('button', { name: 'List view' }).click();
+    await page.getByRole('button', { name: 'Solved' }).click();
+    await expect(page.getByText('No days match this filter.')).toBeVisible(); // a fresh player has solved nothing
+    await page.getByRole('button', { name: 'Not played' }).click();
+    await expect(page.getByRole('link', { name: /Not played/ }).first()).toBeVisible();
+
+    await page.getByRole('button', { name: /Surprise me/ }).click();
+    await expect(page).toHaveURL(/\/time-travel\/\d{4}-\d{2}-\d{2}$/);
+    await expect(page.getByText(/just for fun/)).toBeVisible();
+  });
+
   test('invalid dates show not found', async ({ page }) => {
     const res = await page.goto('/time-travel/not-a-date');
     expect(res?.status()).toBe(404);
