@@ -8,9 +8,10 @@
 
 /* Accent colour for the whole app. Every accent shade (text, glows, borders,
    tinted near-black panels) is derived from these two values:
-     --accent-h  hue in degrees (40 = gold; the original prototype was 260 = violet)
-     --accent-s  saturation multiplier (1 = as designed, lower = more muted) */
-:root { --accent-h: 40; --accent-s: 0.8; }
+     --accent-h  hue in degrees (e.g. 40 = gold, 260 = the prototype's violet)
+     --accent-s  saturation multiplier (1 = vivid, 0 = pure grey)
+   Current: silver / platinum grey (a whisper of cool tint so it reads as metal). */
+:root { --accent-h: 220; --accent-s: 0.08; }
 
 /* Design tokens — use as Tailwind classes, e.g. bg-panel, text-accent, border-line. */
 @theme inline {

@@ -1,24 +1,35 @@
 /* ==========================================================
-   CINERAAGAM — GOLDEN PREMIERE
-   A black-tie film premiere: theatre black, metallic gold and
-   warm ivory, with film grain, a spotlight, marquee lights, a
+   CINERAAGAM — PREMIERE (cinema theme)
+   A film premiere: theatre black and a metallic accent (currently
+   silver/platinum), with film grain, a spotlight, marquee lights, a
    film-strip clue track, a film reel and an "admit one" ticket.
-   Loaded after legacy.css; accent hue/saturation live in globals.css.
+   Every colour here follows --accent-h / --accent-s (app/globals.css),
+   so the whole theme can be re-tinted in one place.
    ========================================================== */
 :root {
-  --gold-foil: linear-gradient(135deg, #fbe7b0 0%, #e3b55a 36%, #f7dc95 60%, #b9852c 100%);
-  --gold-ink: #1b1305;
-  --gold-glow: hsl(40 85% 55% / 0.28);
-  --gold-line: hsl(40 45% 38% / 0.55);
-  --theatre-black: #050403;
+  --a-sat: calc(80% * var(--accent-s));
+  --a-sat-dim: calc(40% * var(--accent-s));
+  --tone-100: hsl(var(--accent-h) var(--a-sat) 90%);
+  --tone-200: hsl(var(--accent-h) var(--a-sat) 82%);
+  --tone-300: hsl(var(--accent-h) var(--a-sat) 72%);
+  --tone-400: hsl(var(--accent-h) var(--a-sat) 62%);
+  --tone-500: hsl(var(--accent-h) var(--a-sat) 50%);
+  --tone-600: hsl(var(--accent-h) var(--a-sat) 40%);
+  --tone-ink: hsl(var(--accent-h) var(--a-sat) 7%);
+  --foil: linear-gradient(135deg, var(--tone-100) 0%, var(--tone-400) 36%, var(--tone-200) 60%, var(--tone-600) 100%);
+  --foil-glow: hsl(var(--accent-h) var(--a-sat) 60% / 0.22);
+  --foil-line: hsl(var(--accent-h) var(--a-sat-dim) 38% / 0.55);
+  --panel-warm: hsl(var(--accent-h) var(--a-sat-dim) 12%);
+  --panel-deep: hsl(var(--accent-h) var(--a-sat-dim) 4%);
+  --theatre-black: hsl(var(--accent-h) var(--a-sat-dim) 1.6%);
 }
 
-/* ---- Canvas: theatre darkness, warm house lights, film grain ---- */
+/* ---- Canvas: theatre darkness, house lights, film grain ---- */
 html, body { background: var(--theatre-black); }
 .app-shell {
   background:
-    radial-gradient(ellipse 70% 45% at 60% -8%, hsl(40 70% 45% / 0.10), transparent 60%),
-    radial-gradient(ellipse 60% 40% at 0% 100%, hsl(350 60% 25% / 0.08), transparent 60%),
+    radial-gradient(ellipse 70% 45% at 60% -8%, hsl(var(--accent-h) var(--a-sat) 60% / 0.08), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 0% 100%, hsl(var(--accent-h) var(--a-sat) 50% / 0.05), transparent 60%),
     var(--theatre-black);
 }
 body::after {
@@ -31,13 +42,13 @@ body::after {
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-.sidebar { background: #070605; }
+.sidebar { background: hsl(var(--accent-h) var(--a-sat-dim) 2.5%); }
 
 /* ---- Brand ---- */
-.brand-mark { background: var(--gold-foil); color: var(--gold-ink); box-shadow: 0 8px 28px var(--gold-glow), inset 0 1px 0 #fff8; }
-.brand-name span { background: var(--gold-foil); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.brand-mark { background: var(--foil); color: var(--tone-ink); box-shadow: 0 8px 28px var(--foil-glow), inset 0 1px 0 #fff8; }
+.brand-name span { background: var(--foil); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
-/* ---- Hero: spotlight beam + gold-foil script ---- */
+/* ---- Hero: spotlight beam + metallic script ---- */
 .welcome-row > * { position: relative; z-index: 1; }
 .welcome-row::before {
   content: '';
@@ -48,70 +59,70 @@ body::after {
   width: 760px;
   height: 520px;
   background: conic-gradient(from 180deg at 50% 0%,
-    transparent 158deg, hsl(42 90% 72% / 0.07) 170deg, hsl(42 95% 78% / 0.13) 180deg,
-    hsl(42 90% 72% / 0.07) 190deg, transparent 202deg);
+    transparent 158deg, hsl(var(--accent-h) var(--a-sat) 85% / 0.06) 170deg, hsl(var(--accent-h) var(--a-sat) 90% / 0.11) 180deg,
+    hsl(var(--accent-h) var(--a-sat) 85% / 0.06) 190deg, transparent 202deg);
   filter: blur(10px);
 }
 .welcome-row h1 em, .placeholder-page h1 em, .name-modal h2 em {
-  background: var(--gold-foil);
+  background: var(--foil);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   padding-right: 0.06em;
 }
-.eyebrow { color: #e9c87e; }
-.eyebrow-line { background: var(--gold-foil); }
+.eyebrow { color: var(--tone-300); }
+.eyebrow-line { background: var(--foil); }
 
-/* ---- Gold-foil primary actions ---- */
+/* ---- Metallic primary actions ---- */
 .submit-button, .share-button, .play-button {
-  background: var(--gold-foil);
-  color: var(--gold-ink);
-  box-shadow: 0 8px 26px var(--gold-glow), inset 0 1px 0 #fff9;
+  background: var(--foil);
+  color: var(--tone-ink);
+  box-shadow: 0 8px 26px var(--foil-glow), inset 0 1px 0 #fff9;
 }
-.play-button.is-playing { background: linear-gradient(135deg, #fff1c9, #f0cd7a 60%, #c99a3f); }
-.pause-bars i { background: var(--gold-ink); }
-.submit-button:hover:not(:disabled), .share-button:hover, .play-button:hover { filter: brightness(1.07) saturate(1.05); }
+.play-button.is-playing { background: linear-gradient(135deg, var(--tone-100), var(--tone-200) 60%, var(--tone-500)); }
+.pause-bars i { background: var(--tone-ink); }
+.submit-button:hover:not(:disabled), .share-button:hover, .play-button:hover { filter: brightness(1.07); }
 
 /* ---- Navigation ---- */
 .nav-item.active {
-  background: linear-gradient(100deg, hsl(40 45% 11%), hsl(40 20% 6%) 80%);
-  color: #f6e3b4;
-  box-shadow: inset 2px 0 #e3b55a, 0 8px 24px #0006;
+  background: linear-gradient(100deg, var(--panel-warm), var(--panel-deep) 80%);
+  color: var(--tone-100);
+  box-shadow: inset 2px 0 var(--tone-400), 0 8px 24px #0006;
 }
-.nav-item.active::after { background: #f3d48a; box-shadow: 0 0 12px #e3b55a; }
+.nav-item.active::after { background: var(--tone-200); box-shadow: 0 0 12px var(--tone-400); }
 
 /* ---- Countdown as a lit marquee ---- */
 .countdown-card {
-  border-color: var(--gold-line);
-  background: radial-gradient(ellipse at 50% 0%, hsl(40 45% 12%), #0a0907 72%);
-  box-shadow: 0 18px 50px #000a, 0 0 40px hsl(40 80% 50% / 0.08);
+  border-color: var(--foil-line);
+  background: radial-gradient(ellipse at 50% 0%, var(--panel-warm), var(--panel-deep) 72%);
+  box-shadow: 0 18px 50px #000a, 0 0 40px hsl(var(--accent-h) var(--a-sat) 60% / 0.06);
 }
 .countdown-card::before {
   content: '';
   position: absolute;
   inset: 6px;
   border-radius: 10px;
-  border: 3px dotted #f4cf78;
+  border: 3px dotted var(--tone-200);
   pointer-events: none;
-  opacity: 0.6;
-  filter: drop-shadow(0 0 3px #f2b84b);
+  opacity: 0.55;
+  filter: drop-shadow(0 0 3px var(--tone-400));
   animation: marqueeTwinkle 2.6s ease-in-out infinite;
 }
 .countdown-time {
-  background: linear-gradient(180deg, #fff4d6, #f0cf86);
+  background: linear-gradient(180deg, #fff, var(--tone-200));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
-@keyframes marqueeTwinkle { 50% { opacity: 0.32; } }
+@keyframes marqueeTwinkle { 50% { opacity: 0.3; } }
 
 /* ---- Clue progress as a film strip ---- */
 ol.clip-progress {
   position: relative;
   padding: 20px 16px;
   border-radius: 10px;
-  background: #0b0a08;
-  border: 1px solid hsl(40 25% 16%);
+  background: var(--panel-deep);
+  border: 1px solid hsl(var(--accent-h) var(--a-sat-dim) 16%);
 }
 .clip-progress::before, .clip-progress::after {
   content: '';
@@ -120,40 +131,40 @@ ol.clip-progress {
   right: 10px;
   height: 6px;
   border-radius: 2px;
-  background: repeating-linear-gradient(90deg, hsl(40 18% 20%) 0 8px, transparent 8px 17px);
+  background: repeating-linear-gradient(90deg, hsl(var(--accent-h) var(--a-sat-dim) 22%) 0 8px, transparent 8px 17px);
 }
 .clip-progress::before { top: 5px; }
 .clip-progress::after { bottom: 5px; }
-.clip-step.current .step-number { background: var(--gold-foil); color: var(--gold-ink); border-color: #f7dc95; box-shadow: 0 0 0 5px hsl(40 80% 55% / 0.10), 0 0 22px var(--gold-glow); }
+.clip-step.current .step-number { background: var(--foil); color: var(--tone-ink); border-color: var(--tone-200); box-shadow: 0 0 0 5px hsl(var(--accent-h) var(--a-sat) 60% / 0.10), 0 0 22px var(--foil-glow); }
 
 /* ---- Listening stage: film reel instead of vinyl ---- */
 .audio-art {
   background:
-    radial-gradient(ellipse at 50% 55%, hsl(40 55% 16%) 0%, hsl(40 35% 8%) 30%, #0a0907 62%, #080706 85%);
+    radial-gradient(ellipse at 50% 55%, hsl(var(--accent-h) var(--a-sat-dim) 16%) 0%, hsl(var(--accent-h) var(--a-sat-dim) 8%) 30%, var(--panel-deep) 62%, var(--theatre-black) 85%);
 }
 .vinyl {
-  border: 2px solid hsl(40 45% 42%);
+  border: 2px solid var(--tone-600);
   background:
-    radial-gradient(circle at 50% 19%, #0a0907 0 11px, transparent 12px),
-    radial-gradient(circle at 79% 35%, #0a0907 0 11px, transparent 12px),
-    radial-gradient(circle at 79% 66%, #0a0907 0 11px, transparent 12px),
-    radial-gradient(circle at 50% 81%, #0a0907 0 11px, transparent 12px),
-    radial-gradient(circle at 21% 66%, #0a0907 0 11px, transparent 12px),
-    radial-gradient(circle at 21% 35%, #0a0907 0 11px, transparent 12px),
-    radial-gradient(circle, hsl(40 30% 26%) 0 52%, hsl(40 22% 16%) 53% 100%);
-  box-shadow: 0 0 0 7px hsl(40 40% 30% / 0.15), 0 0 60px hsl(40 80% 50% / 0.22);
+    radial-gradient(circle at 50% 19%, var(--panel-deep) 0 11px, transparent 12px),
+    radial-gradient(circle at 79% 35%, var(--panel-deep) 0 11px, transparent 12px),
+    radial-gradient(circle at 79% 66%, var(--panel-deep) 0 11px, transparent 12px),
+    radial-gradient(circle at 50% 81%, var(--panel-deep) 0 11px, transparent 12px),
+    radial-gradient(circle at 21% 66%, var(--panel-deep) 0 11px, transparent 12px),
+    radial-gradient(circle at 21% 35%, var(--panel-deep) 0 11px, transparent 12px),
+    radial-gradient(circle, hsl(var(--accent-h) var(--a-sat-dim) 28%) 0 52%, hsl(var(--accent-h) var(--a-sat-dim) 17%) 53% 100%);
+  box-shadow: 0 0 0 7px hsl(var(--accent-h) var(--a-sat-dim) 40% / 0.15), 0 0 60px var(--foil-glow);
 }
-.vinyl-inner { background: var(--gold-foil); color: var(--gold-ink); box-shadow: 0 0 20px var(--gold-glow); }
-.waveform i { background: linear-gradient(180deg, #fbe7b0, #c8963e); box-shadow: 0 0 8px hsl(40 85% 55% / 0.2); }
-.track-rail i { background: var(--gold-foil); }
+.vinyl-inner { background: var(--foil); color: var(--tone-ink); box-shadow: 0 0 20px var(--foil-glow); }
+.waveform i { background: linear-gradient(180deg, var(--tone-100), var(--tone-500)); box-shadow: 0 0 8px var(--foil-glow); }
+.track-rail i { background: var(--foil); }
 
 /* ---- Result as an "admit one" ticket ---- */
 .result-score {
   position: relative;
   padding: 30px 34px 16px;
   border-radius: 12px;
-  background: linear-gradient(135deg, hsl(40 40% 14%), hsl(40 25% 8%));
-  border: 1px dashed hsl(40 55% 45% / 0.55);
+  background: linear-gradient(135deg, var(--panel-warm), hsl(var(--accent-h) var(--a-sat-dim) 7%));
+  border: 1px dashed hsl(var(--accent-h) var(--a-sat-dim) 50% / 0.55);
   -webkit-mask:
     radial-gradient(circle at 0 58%, transparent 11px, #000 12px) left / 51% 100% no-repeat,
     radial-gradient(circle at 100% 58%, transparent 11px, #000 12px) right / 51% 100% no-repeat;
@@ -170,16 +181,15 @@ ol.clip-progress {
   text-align: center;
   font: 600 8px var(--font-dm-mono), monospace;
   letter-spacing: 0.4em;
-  color: #e9c87e;
+  color: var(--tone-300);
 }
-.result-score strong { color: #fbe7b0; }
-.reveal-icon { background: hsl(40 40% 12%); color: #f3d48a; box-shadow: 0 0 30px var(--gold-glow); }
-.reveal-panel h2 { color: #fff4dc; }
+.result-score strong { color: var(--tone-100); }
+.reveal-icon { background: var(--panel-warm); color: var(--tone-200); box-shadow: 0 0 30px var(--foil-glow); }
+.reveal-panel h2 { color: #fff; }
 
 /* ---- Misc touches ---- */
-.footer-heart { color: #e3b55a; }
-.streak-icon, .top-streak svg { color: #f2b84b; }
-.quote-card { background: radial-gradient(ellipse at 100% 0%, hsl(40 45% 16%) 0%, hsl(40 25% 8%) 45%, #0a0907 85%); }
+.footer-heart { color: var(--tone-300); }
+.quote-card { background: radial-gradient(ellipse at 100% 0%, hsl(var(--accent-h) var(--a-sat-dim) 16%) 0%, hsl(var(--accent-h) var(--a-sat-dim) 8%) 45%, var(--panel-deep) 85%); }
 
 @media (prefers-reduced-motion: reduce) {
   .countdown-card::before { animation: none; }
