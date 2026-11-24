@@ -19,7 +19,9 @@ Free and open-source stack, self-hostable, no player logins.
 - A wrong guess or a skip unlocks the next clue. Replaying audio is free.
 - A correct guess ends the game. After three misses the movie and main cast are revealed.
 - **Streak** = consecutive days (IST) on which you solved the daily movie.
-- A new challenge starts at **00:00 IST**.
+- A new challenge starts at **00:00 IST**. A daily game must be finished that day:
+  after midnight an unfinished game turns into a Time Travel game (0 leaderboard
+  points, streak not extended), which you can still finish for fun.
 - **Leaderboards:** weekly (resets Monday 00:00 IST), monthly and all-time, by points.
   Ties go to more days solved, then to whoever reached the total first.
 - **Time Travel:** play past days for fun. It shows "would-have" points in your
@@ -35,6 +37,8 @@ Requires **Node.js 24** and **Docker** (for the local Supabase stack).
 npm install
 npm run db:start       # local Supabase in Docker (first run downloads images)
 npm run env:local      # writes .env.local from the running stack
+npm run catalog:import # optional: ~5,500 Telugu films from Wikidata (CC0)
+npm run db:seed:dev    # optional: sample challenges with synthetic audio
 npm run dev            # http://localhost:3000
 ```
 
@@ -58,6 +62,9 @@ Without `.env.local` the site still renders, but player profiles are disabled.
 | `npm run check` | lint + typecheck + unit tests |
 | `npm run db:start` / `db:stop` / `db:reset` | Local Supabase stack |
 | `npm run env:local` | Generate `.env.local` from `supabase status` |
+| `npm run catalog:import` | Import/refresh the Telugu film catalogue from Wikidata (`-- --dry-run` to preview). Never overwrites edited titles. |
+| `npm run db:seed:dev` | **Local only:** publish sample challenges (today, 3 past days, 1 future) using synthetic audio |
+| `npm run audio:fixtures` | Regenerate the synthetic test clips in `e2e/fixtures/` |
 
 First-time e2e setup: `npx playwright install chromium`. Integration and e2e tests
 need the local stack running and `.env.local` generated.
@@ -75,10 +82,17 @@ need the local stack running and `.env.local` generated.
   (`auto_expose_new_tables = false`). Players can read the movie catalogue and
   their own profile and plays. Answers (`daily_challenges`), clips and cast are
   admin-only.
-- **Players never write game tables directly.** Points are enforced by a database
-  CHECK constraint (3/2/1/0), and there is one play per player per challenge and
-  one guess per clue.
-- **Audio** lives in a private bucket under opaque UUID file names.
+- **Players never write game tables directly.** Guesses go through
+  `public.submit_guess()`, which checks them server-side, locks the play row and
+  ignores duplicate or stale submissions. Points are also enforced by a database
+  CHECK constraint (3/2/1/0). There is one play per player per challenge and one
+  guess per clue.
+- **The answer never reaches the browser** until the game is over:
+  `public.get_challenge()` returns no movie, cast or locked clue until then.
+  Future and draft challenges are invisible.
+- **Audio** lives in a private bucket under opaque UUID file names. Storage RLS
+  (`private.can_read_clip`) lets a player sign a short-lived URL only for clues
+  they have unlocked, so the web app never needs the secret key to serve audio.
 - **Secrets:** only `NEXT_PUBLIC_SUPABASE_URL` and the publishable key reach the
   browser. `SUPABASE_SECRET_KEY` is server/test-only and never `NEXT_PUBLIC_`.
 - A Content-Security-Policy restricts the page to our origin and the Supabase origin.
@@ -88,18 +102,23 @@ Schema and policies live in `supabase/migrations/`, and their tests in `supabase
 ## Project layout
 
 ```
-app/                 Next.js App Router pages (/, /time-travel, /leaderboard,
-                     /stats, /history, /how-to-play), layout, fonts, styles
-app/styles/legacy.css  Original prototype CSS, migrated to Tailwind gradually
-components/          UI components (shell/, game/, ...)
-lib/                 Framework-free logic with unit tests
-  game/              Rules, points and the game state machine
+app/(game)/          Player pages (/, /time-travel[/date], /leaderboard, /stats,
+                     /history, /how-to-play) with the anonymous-player shell
+app/admin/           Admin dashboard (separate login; Phase 3)
+app/styles/          legacy.css (prototype) + cinema.css (theme)
+components/          UI components (shell/, game/, admin/, ...)
+lib/                 Logic with unit tests
+  game/              Rules/points and the typed game API client
+  catalog/           Wikidata catalogue parsing
   time/ist.ts        IST date and countdown helpers
   search/movies.ts   Autocomplete matching
   share.ts           Spoiler-free share text
-  player/            Display-name validation
-  demo.ts            Phase 0 demo data (replaced by Supabase)
-e2e/                 Playwright tests
+  player/            Display-name validation + anonymous player provider
+  supabase/          Browser/server Supabase clients
+scripts/             env, Wikidata import, dev seed, admin tools, test audio
+supabase/            config, migrations, seed, pgTAP tests
+tests/integration/   API/auth/storage tests against the local stack
+e2e/                 Playwright tests + synthetic audio fixtures
 ```
 
 ### Styling
@@ -117,13 +136,15 @@ utilities on the same element. Retire them as each component is rebuilt.
   and dialogs, self-hosted fonts, live IST countdown.
 - [x] **Phase 1 — Supabase:** local stack, schema migrations, RLS, pgTAP tests,
   silent anonymous auth, display name stored server-side.
-- [ ] **Phase 2 — Daily game:** server-validated guesses (Postgres functions),
-  private audio with signed URLs, real player, Wikidata movie catalogue.
+- [x] **Phase 2 — Daily game:** server-validated guesses (Postgres functions),
+  private audio with signed URLs, real player (replay, re-listen, buffering and
+  error states), progress across refreshes, midnight-IST rule, basic Time Travel,
+  Wikidata movie catalogue.
 - [ ] **Phase 3 — Admin:** movies, cast, clip upload (5–20 s, metadata stripped), scheduling.
 - [ ] **Phase 4 — Progress:** streaks, statistics, history, leaderboards, sharing.
-- [ ] **Phase 5 — Time Travel.**
+- [ ] **Phase 5 — Time Travel extras** (calendar view, filters).
 - [ ] **Phase 6 — Polish:** PWA install, accessibility and responsive pass, audio visualiser.
 - [ ] **Phase 7 — Production:** Docker Compose (app + self-hosted Supabase + Caddy), backups.
 
-> **Demo data:** until Phase 2, the Today page uses a demo challenge with the answer
-> in the browser bundle. From Phase 2 answers and unrevealed clues stay on the server.
+> The streak, rank and win-rate numbers in the sidebar and right rail are still
+> placeholders until Phase 4.

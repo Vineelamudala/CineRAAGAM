@@ -155,6 +155,18 @@ ol.clip-progress {
   box-shadow: 0 0 0 7px hsl(var(--accent-h) var(--a-sat-dim) 40% / 0.15), 0 0 60px var(--foil-glow);
 }
 .vinyl-inner { background: var(--foil); color: var(--tone-ink); box-shadow: 0 0 20px var(--foil-glow); }
+/* The reel turns and the waveform dances only while a clue is actually playing. */
+.vinyl { animation-duration: 7s; animation-play-state: paused; }
+.audio-panel.is-playing .vinyl { animation-play-state: running; }
+.waveform i { transform-origin: center; }
+.audio-panel.is-playing .waveform i { animation: barPulse 0.85s ease-in-out infinite alternate; }
+@keyframes barPulse { from { transform: scaleY(0.45); } to { transform: scaleY(1.08); } }
+
+/* Clue steps: wrong/skipped clues are muted; unlocked clues can be replayed. */
+.clip-step.missed { color: var(--color-muted); }
+.clip-step.missed .step-number { background: transparent; border-color: hsl(var(--accent-h) var(--a-sat-dim) 26%); color: #e79aa2; }
+.step-listen:hover .step-number { border-color: var(--tone-200); box-shadow: 0 0 14px var(--foil-glow); }
+.step-listen:focus-visible { outline: 2px solid var(--tone-200); outline-offset: 4px; border-radius: 6px; }
 .waveform i { background: linear-gradient(180deg, var(--tone-100), var(--tone-500)); box-shadow: 0 0 8px var(--foil-glow); }
 .track-rail i { background: var(--foil); }
 
@@ -192,7 +204,7 @@ ol.clip-progress {
 .quote-card { background: radial-gradient(ellipse at 100% 0%, hsl(var(--accent-h) var(--a-sat-dim) 16%) 0%, hsl(var(--accent-h) var(--a-sat-dim) 8%) 45%, var(--panel-deep) 85%); }
 
 @media (prefers-reduced-motion: reduce) {
-  .countdown-card::before { animation: none; }
+  .countdown-card::before, .audio-panel.is-playing .waveform i { animation: none; }
 }
 @media (max-width: 620px) {
   .welcome-row::before { left: -20%; width: 520px; }

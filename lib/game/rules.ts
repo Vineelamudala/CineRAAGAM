@@ -5,14 +5,15 @@
  *   clue 1 = Hard (3 points), clue 2 = Medium (2), clue 3 = Easy (1).
  * Not solving the movie earns 0 points.
  *
- * NOTE: the database computes official points server-side (Phase 2).
- * These helpers only describe the rules for display and for client-side
- * state; the browser is never trusted to report points.
+ * NOTE: the database is authoritative (public.submit_guess + CHECK
+ * constraints). These helpers only describe the rules for display; the
+ * browser never decides or reports points.
  */
 
 export const TOTAL_CLUES = 3;
 
 export type ClueNumber = 1 | 2 | 3;
+export type ClueResult = 'correct' | 'wrong' | 'skipped';
 export type ClueDifficulty = 'Hard' | 'Medium' | 'Easy';
 
 export const CLUES: ReadonlyArray<{ number: ClueNumber; difficulty: ClueDifficulty; points: number }> = [

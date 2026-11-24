@@ -1,5 +1,4 @@
-import type { ClueResult } from './game/state';
-import { TOTAL_CLUES } from './game/rules';
+import { TOTAL_CLUES, type ClueResult } from './game/rules';
 
 const MARK: Record<ClueResult, string> = { correct: '🟩', wrong: '🟥', skipped: '⬛' };
 const UNUSED = '⬜';

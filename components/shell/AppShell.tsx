@@ -8,12 +8,18 @@ import { NameModal } from './NameModal';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 
+const DISMISS_KEY = 'cineraagam:name-dismissed';
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isMobile = useMediaQuery('(max-width: 620px)');
   const player = usePlayer();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [nameDismissed, setNameDismissed] = useState(false);
+  // "Maybe later" lasts for the browser session (the dialog only renders on the
+  // client after the session loads, so this doesn't affect server rendering).
+  const [nameDismissed, setNameDismissed] = useState(() => {
+    try { return typeof window !== 'undefined' && window.sessionStorage.getItem(DISMISS_KEY) === '1'; } catch { return false; }
+  });
   const [editingName, setEditingName] = useState(false);
   const closeMenuRef = useRef<HTMLButtonElement>(null);
   const openMenuRef = useRef<HTMLButtonElement>(null);
@@ -78,7 +84,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             if (!error) setEditingName(false);
             return error;
           }}
-          onClose={() => { setNameDismissed(true); setEditingName(false); }}
+          onClose={() => {
+            setNameDismissed(true);
+            setEditingName(false);
+            try { window.sessionStorage.setItem(DISMISS_KEY, '1'); } catch { /* storage blocked: dismiss for this page only */ }
+          }}
         />
       )}
     </div>

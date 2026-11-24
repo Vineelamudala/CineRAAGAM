@@ -3,7 +3,6 @@ import { CalendarDays, CircleHelp, ListMusic, Trophy } from 'lucide-react';
 import { Countdown } from '@/components/Countdown';
 import { DailyGame } from '@/components/game/DailyGame';
 import { RightRail } from '@/components/RightRail';
-import { DEMO_CATALOG, DEMO_CHALLENGE } from '@/lib/demo';
 
 const MORE_WAYS = [
   { href: '/time-travel', icon: CalendarDays, title: 'Time Travel', text: 'Revisit past challenges' },
@@ -24,14 +23,7 @@ export default function TodayPage() {
       </section>
 
       <div className="game-layout">
-        <DailyGame
-          challengeNumber={DEMO_CHALLENGE.number}
-          title={DEMO_CHALLENGE.title}
-          clipDurations={DEMO_CHALLENGE.clipDurations}
-          catalog={DEMO_CATALOG}
-          demoAnswerId={DEMO_CHALLENGE.answerId}
-          reveal={DEMO_CHALLENGE.reveal}
-        />
+        <DailyGame />
         <RightRail />
       </div>
 

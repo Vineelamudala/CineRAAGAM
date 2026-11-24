@@ -1,42 +1,65 @@
 import { expect, test, type Page } from '@playwright/test';
 
+// Set by e2e/global-setup.ts from the seeded challenge for today (IST).
+const ANSWER = process.env.E2E_ANSWER_TITLE!;
+const ANSWER_YEAR = process.env.E2E_ANSWER_YEAR ?? '';
+const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 /** Dismiss the first-visit name dialog. */
 async function skipName(page: Page) {
   await page.getByRole('dialog').getByRole('button', { name: 'Maybe later' }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
 }
 
-async function pick(page: Page, typed: string, option: string) {
-  const input = page.getByRole('combobox', { name: 'WHICH MOVIE IS THIS?' });
-  await input.fill(typed);
-  await page.getByRole('option', { name: new RegExp(option) }).click();
-  await expect(input).toHaveValue(option);
+const guessBox = (page: Page) => page.getByRole('combobox', { name: 'WHICH MOVIE IS THIS?' });
+
+async function pick(page: Page, typed: string, title: string, year = '') {
+  await guessBox(page).fill(typed);
+  await page.getByRole('option', { name: new RegExp(`^${esc(title)}\\s*${esc(year)}`) }).first().click();
+  await expect(guessBox(page)).toHaveValue(title);
 }
 
-test.describe('daily game (demo data)', () => {
+async function submit(page: Page) {
+  await page.getByRole('button', { name: /SUBMIT GUESS/ }).click();
+}
+
+test.describe('daily game (server-validated)', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await skipName(page);
+    await expect(page.locator('.clue-badge')).toContainText('Hard · 3 pts');
   });
 
-  test('has no difficulty dropdown; shows clue 1 as Hard · 3 pts', async ({ page }) => {
+  test('shows clue 1 as Hard · 3 pts and no difficulty dropdown', async ({ page }) => {
     await expect(page.getByRole('combobox', { name: 'Difficulty' })).toHaveCount(0);
-    await expect(page.getByText('Hard · 3 pts')).toBeVisible();
+    await expect(page.getByText(/TODAY’S CHALLENGE/)).toBeVisible();
   });
 
-  test('correct guess on clue 1 earns 3 points', async ({ page }) => {
-    await pick(page, 'jer', 'Jersey');
-    await page.getByRole('button', { name: /SUBMIT GUESS/ }).click();
+  test('clue audio loads and plays; replay does not use up a clue', async ({ page }) => {
+    const play = page.getByRole('button', { name: 'Play clue', exact: true });
+    await expect(play).toBeEnabled();
+    await play.click();
+    await expect(page.getByText(/Playing clue|Buffering/)).toBeVisible();
+    await page.getByRole('button', { name: 'Replay clue from the start' }).click();
+    await expect(page.locator('.clue-badge')).toContainText('Hard · 3 pts');
+  });
+
+  test('correct guess on clue 1 earns 3 points and reveals the cast', async ({ page }) => {
+    await pick(page, ANSWER.slice(0, 4), ANSWER, ANSWER_YEAR);
+    await submit(page);
     await expect(page.getByText('YOU GOT IT!')).toBeVisible();
     await expect(page.locator('.result-score')).toContainText('3POINTS');
+    await expect(page.getByRole('heading', { name: ANSWER })).toBeVisible();
+    await expect(page.locator('.reveal-cast')).toContainText('Starring');
   });
 
   test('wrong guess unlocks clue 2 (Medium); solving there earns 2 points', async ({ page }) => {
-    await pick(page, 'rrr', 'RRR');
-    await page.getByRole('button', { name: /SUBMIT GUESS/ }).click();
-    await expect(page.getByText('Medium · 2 pts')).toBeVisible();
-    await pick(page, 'jers', 'Jersey');
-    await page.getByRole('button', { name: /SUBMIT GUESS/ }).click();
+    await pick(page, 'mahanati', 'Mahanati');
+    await submit(page);
+    await expect(page.locator('.clue-badge')).toContainText('Medium · 2 pts');
+    await expect(page.getByText(/Not quite/)).toBeVisible();
+    await pick(page, ANSWER.slice(0, 4), ANSWER, ANSWER_YEAR);
+    await submit(page);
     await expect(page.locator('.result-score')).toContainText('2POINTS');
   });
 
@@ -46,43 +69,64 @@ test.describe('daily game (demo data)', () => {
       await page.getByRole('button', { name: /Skip this clue/ }).click();
     }
     await expect(page.getByText('TODAY’S MOVIE REVEAL')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Jersey' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: ANSWER })).toBeVisible();
     await expect(page.locator('.result-score')).toContainText('0POINTS');
   });
 
+  test('progress survives a page refresh', async ({ page }) => {
+    await page.getByRole('button', { name: /Skip this clue/ }).click();
+    await expect(page.locator('.clue-badge')).toContainText('Medium · 2 pts');
+    await page.reload();
+    await expect(page.locator('.clue-badge')).toContainText('Medium · 2 pts');
+    await expect(page.getByRole('button', { name: /Listen to clue 1/ })).toBeVisible();
+  });
+
   test('free text that was not picked from the list is not submitted', async ({ page }) => {
-    const input = page.getByRole('combobox', { name: 'WHICH MOVIE IS THIS?' });
-    await input.fill('Jersey');
-    await input.press('Escape'); // close the suggestions without picking one
-    await page.getByRole('button', { name: /SUBMIT GUESS/ }).click();
+    await guessBox(page).fill(ANSWER);
+    await guessBox(page).press('Escape'); // close the suggestions without picking one
+    await submit(page);
     await expect(page.getByText('Pick a movie from the suggestions list.')).toBeVisible();
-    await expect(page.getByText('Hard · 3 pts')).toBeVisible();
+    await expect(page.locator('.clue-badge')).toContainText('Hard · 3 pts');
   });
 
   test('autocomplete works with the keyboard', async ({ page }) => {
-    const input = page.getByRole('combobox', { name: 'WHICH MOVIE IS THIS?' });
+    const input = guessBox(page);
     await input.fill('arya');
     await expect(input).toHaveAttribute('aria-expanded', 'true');
+    const second = await page.getByRole('option').nth(1).locator('span').textContent();
     await input.press('ArrowDown');
     await input.press('ArrowDown');
     await input.press('Enter');
-    await expect(input).toHaveValue('Arya 2');
-    await input.press('Escape');
+    await expect(input).toHaveValue(second!);
   });
 
   test('alternate names match (AVPL)', async ({ page }) => {
-    await page.getByRole('combobox', { name: 'WHICH MOVIE IS THIS?' }).fill('avpl');
+    await guessBox(page).fill('avpl');
     await expect(page.getByRole('option', { name: /Ala Vaikunthapurramuloo/ })).toBeVisible();
-  });
-
-  test('replaying audio does not use up a clue', async ({ page }) => {
-    await page.getByRole('button', { name: 'Replay clue from the start' }).click();
-    await page.getByRole('button', { name: 'Replay clue from the start' }).click();
-    await expect(page.getByText('Hard · 3 pts')).toBeVisible();
   });
 
   test('countdown shows a time until the next IST midnight', async ({ page }) => {
     await expect(page.getByRole('timer')).toHaveText(/^\d{2}:\d{2}:\d{2}$/);
+  });
+});
+
+test.describe('time travel', () => {
+  test('lists past days and lets you play one (for fun)', async ({ page }) => {
+    await page.goto('/time-travel');
+    await skipName(page);
+    const firstDay = page.getByRole('link', { name: /#\d+/ }).first();
+    await expect(firstDay).toBeVisible();
+    await firstDay.click();
+    await expect(page).toHaveURL(/\/time-travel\/\d{4}-\d{2}-\d{2}$/);
+    await expect(page.getByText(/TIME TRAVEL/).first()).toBeVisible();
+    await expect(page.getByText(/just for fun/)).toBeVisible();
+    for (let i = 0; i < 3; i++) await page.getByRole('button', { name: /Skip this clue/ }).click();
+    await expect(page.getByText('POINTS · FOR FUN')).toBeVisible();
+  });
+
+  test('invalid dates show not found', async ({ page }) => {
+    const res = await page.goto('/time-travel/not-a-date');
+    expect(res?.status()).toBe(404);
   });
 });
 
@@ -104,6 +148,14 @@ test.describe('display name (stored in Supabase)', () => {
     await page.reload();
     await expect(page.locator('.profile-copy strong')).toHaveText(name);
     await expect(page.getByRole('dialog')).toBeHidden();
+  });
+
+  test('"Maybe later" lasts for the browser session', async ({ page }) => {
+    await page.goto('/');
+    await skipName(page);
+    await page.goto('/how-to-play');
+    await expect(page.getByRole('heading', { name: 'How to play' })).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
   });
 
   test('a name already taken by another player is rejected', async ({ page, browser }) => {

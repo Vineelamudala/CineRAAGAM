@@ -5,8 +5,9 @@ import { SkipForward } from 'lucide-react';
 import { searchMovies, type MovieOption } from '@/lib/search/movies';
 
 type Props = {
-  catalog: MovieOption[];
+  catalog: MovieOption[] | null; // null while loading
   message: string;
+  busy: boolean;
   onMessage: (text: string) => void;
   onGuess: (movie: MovieOption) => void;
   onSkip: () => void;
@@ -16,16 +17,15 @@ type Props = {
  * Movie guess input: an accessible combobox (WAI-ARIA 1.2 list autocomplete).
  * Players must pick a movie from the suggestions; free text is never submitted.
  */
-export function GuessForm({ catalog, message, onMessage, onGuess, onSkip }: Props) {
+export function GuessForm({ catalog, message, busy, onMessage, onGuess, onSkip }: Props) {
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<MovieOption | null>(null);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
-  const [submitting, setSubmitting] = useState(false);
   const listId = useId();
   const optionId = (i: number) => `${listId}-opt-${i}`;
 
-  const results = useMemo(() => searchMovies(query, catalog), [query, catalog]);
+  const results = useMemo(() => (catalog ? searchMovies(query, catalog) : []), [query, catalog]);
   const showList = open && query.trim() !== '' && !selected;
 
   function choose(movie: MovieOption) {
@@ -36,12 +36,11 @@ export function GuessForm({ catalog, message, onMessage, onGuess, onSkip }: Prop
   }
 
   function submit() {
-    if (submitting) return; // guard against double clicks / double Enter
+    if (busy) return; // guard against double clicks / double Enter
     if (!selected) {
       onMessage(query.trim() ? 'Pick a movie from the suggestions list.' : 'Enter a movie name or skip this clue.');
       return;
     }
-    setSubmitting(true);
     onGuess(selected);
   }
 
@@ -89,11 +88,14 @@ export function GuessForm({ catalog, message, onMessage, onGuess, onSkip }: Prop
             placeholder="Type a Telugu movie name..."
             autoComplete="off"
             spellCheck={false}
+            disabled={busy}
           />
           <span className="input-hint" aria-hidden="true">↵</span>
           {showList && (
             <div className="suggestions">
-              {results.length > 0 ? (
+              {catalog === null ? (
+                <div className="no-match" id={listId}>Loading movie list…</div>
+              ) : results.length > 0 ? (
                 <ul id={listId} role="listbox" aria-label="Matching movies">
                   {results.map((m, i) => (
                     <li
@@ -115,12 +117,14 @@ export function GuessForm({ catalog, message, onMessage, onGuess, onSkip }: Prop
             </div>
           )}
         </div>
-        <button className="submit-button" onClick={submit} disabled={submitting}>SUBMIT GUESS <span aria-hidden="true">↗</span></button>
+        <button className="submit-button" onClick={submit} disabled={busy}>
+          {busy ? 'CHECKING…' : <>SUBMIT GUESS <span aria-hidden="true">↗</span></>}
+        </button>
       </div>
       <p className="feedback-message" role="status" aria-live="polite">{message}</p>
       <div className="guess-footer">
         <span><span className="tiny-dot" aria-hidden="true" /> One guess per clue</span>
-        <button className="skip-button" onClick={() => { if (!submitting) { setSubmitting(true); onSkip(); } }} disabled={submitting}>
+        <button className="skip-button" onClick={() => { if (!busy) onSkip(); }} disabled={busy}>
           Skip this clue <SkipForward size={14} aria-hidden="true" />
         </button>
       </div>

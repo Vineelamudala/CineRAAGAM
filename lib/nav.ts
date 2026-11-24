@@ -11,6 +11,11 @@ export const NAV_ITEMS: NavItem[] = [
   { href: '/how-to-play', label: 'How to Play', icon: CircleHelp },
 ];
 
+/** True when `pathname` is the nav item's page or one of its sub-pages. */
+export function isActiveNav(href: string, pathname: string): boolean {
+  return href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function navLabelFor(pathname: string): string {
-  return NAV_ITEMS.find(i => i.href === pathname)?.label ?? 'Today';
+  return NAV_ITEMS.find(i => isActiveNav(i.href, pathname))?.label ?? 'Today';
 }

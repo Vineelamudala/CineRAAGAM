@@ -1,6 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import { AppShell } from '@/components/shell/AppShell';
-import { PlayerProvider } from '@/lib/player/PlayerProvider';
 import { dmMono, dmSans, playfair } from './fonts';
 import './globals.css';
 
@@ -12,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#030304',
+  themeColor: '#050505',
   colorScheme: 'dark',
   width: 'device-width',
   initialScale: 1,
@@ -21,11 +19,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${dmSans.variable} ${dmMono.variable} ${playfair.variable}`}>
-      <body>
-        <PlayerProvider>
-          <AppShell>{children}</AppShell>
-        </PlayerProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

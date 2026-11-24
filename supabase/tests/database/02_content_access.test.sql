@@ -3,6 +3,12 @@ begin;
 create extension if not exists pgtap with schema extensions;
 select no_plan();
 
+-- Start from a clean slate (inside this transaction, rolled back at the end),
+-- so existing local data such as seeded challenges cannot affect the results.
+delete from public.guesses;
+delete from public.plays;
+delete from public.daily_challenges;
+
 insert into auth.users (id, aud, role, is_anonymous, raw_app_meta_data) values
   ('aaaaaaaa-0000-0000-0000-000000000001', 'authenticated', 'authenticated', false, '{"provider":"email","role":"admin"}'),
   ('bbbbbbbb-0000-0000-0000-000000000002', 'authenticated', 'authenticated', true, '{}'),

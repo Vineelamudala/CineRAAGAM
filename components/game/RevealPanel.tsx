@@ -1,24 +1,27 @@
 'use client';
 
 import { useState } from 'react';
-import { RotateCcw, Share2, Trophy } from 'lucide-react';
-import { gamePoints, type GameState } from '@/lib/game/state';
+import { Check, Share2, SkipForward, Trophy, X } from 'lucide-react';
+import type { ChallengeState } from '@/lib/game/api';
 import { buildShareText } from '@/lib/share';
 
-type Props = {
-  state: GameState;
-  challengeNumber: number;
-  reveal: { title: string; cast: string[] };
-  onReset: () => void;
-};
+type Props = { state: ChallengeState };
 
-export function RevealPanel({ state, challengeNumber, reveal, onReset }: Props) {
+export function RevealPanel({ state }: Props) {
   const [shareStatus, setShareStatus] = useState('');
-  const won = state.status === 'won';
-  const points = gamePoints(state);
+  const play = state.play!;
+  const reveal = state.reveal!;
+  const won = play.status === 'won';
+  const timeTravel = play.mode === 'time_travel';
+  const points = play.points;
 
   async function share() {
-    const text = buildShareText({ challengeNumber, results: state.results, points, url: window.location.origin });
+    const text = buildShareText({
+      challengeNumber: state.number,
+      results: state.guesses.map(g => g.result),
+      points,
+      url: window.location.origin,
+    });
     try {
       if (navigator.share) {
         await navigator.share({ title: 'Cineraagam', text });
@@ -35,17 +38,30 @@ export function RevealPanel({ state, challengeNumber, reveal, onReset }: Props) 
   return (
     <div className="reveal-panel">
       <div className="reveal-icon" aria-hidden="true"><Trophy size={27} /></div>
-      <div className="reveal-eyebrow">{won ? 'YOU GOT IT!' : 'TODAY’S MOVIE REVEAL'}</div>
-      <h2>{reveal.title}</h2>
-      <p className="reveal-cast">Starring {reveal.cast.join(' · ')}</p>
+      <div className="reveal-eyebrow">{won ? 'YOU GOT IT!' : timeTravel ? 'THE MOVIE WAS' : 'TODAY’S MOVIE REVEAL'}</div>
+      <h2>{reveal.title}{reveal.year ? <span className="sr-only-live"> ({reveal.year})</span> : null}</h2>
+      {reveal.cast.length > 0 && <p className="reveal-cast">Starring {reveal.cast.join(' · ')}</p>}
+
       <div className="result-score">
-        <div><strong>{points}</strong><span>{points === 1 ? 'POINT' : 'POINTS'}</span></div>
-        <div><strong>{state.results.length}</strong><span>CLUES USED</span></div>
+        <div><strong>{points}</strong><span>{timeTravel ? 'POINTS · FOR FUN' : points === 1 ? 'POINT' : 'POINTS'}</span></div>
+        <div><strong>{state.guesses.length}</strong><span>CLUES USED</span></div>
         <div><strong>{won ? 'SOLVED' : 'MISSED'}</strong><span>RESULT</span></div>
       </div>
+
+      <ol className="m-0 mb-5 flex list-none flex-wrap justify-center gap-x-4 gap-y-1 p-0 text-[11px] text-muted" aria-label="Your guesses">
+        {state.guesses.map(g => (
+          <li key={g.clue} className="flex items-center gap-1.5">
+            {g.result === 'correct' ? <Check size={13} className="text-success" aria-label="correct" />
+              : g.result === 'skipped' ? <SkipForward size={13} aria-label="skipped" />
+              : <X size={13} className="text-danger" aria-label="wrong" />}
+            <span>Clue {g.clue}: {g.result === 'skipped' ? 'skipped' : g.movie_title}</span>
+          </li>
+        ))}
+      </ol>
+
       <button className="share-button" onClick={share}><Share2 size={16} aria-hidden="true" /> SHARE RESULT</button>
       <p className="feedback-message" role="status" aria-live="polite">{shareStatus}</p>
-      <button className="text-button" onClick={onReset}>Replay demo <RotateCcw size={13} aria-hidden="true" /></button>
+      <p className="m-0 mt-3 text-[10px] text-muted">Tap any clue above to listen again.</p>
     </div>
   );
 }

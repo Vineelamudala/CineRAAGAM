@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { AudioLines, Check, Flame, UserRound, X } from 'lucide-react';
 import type { Ref } from 'react';
 import { DEMO_STATS } from '@/lib/demo';
-import { NAV_ITEMS } from '@/lib/nav';
+import { NAV_ITEMS, isActiveNav } from '@/lib/nav';
 
 const WEEK = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
@@ -31,7 +31,7 @@ export function Sidebar({ pathname, open, inert, onNavigate, onClose, closeRef, 
       <div className="side-label">PLAY</div>
       <nav className="nav-list" aria-label="Main navigation">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href;
+          const active = isActiveNav(href, pathname);
           return (
             <Link key={href} href={href} onClick={onNavigate} className={`nav-item ${active ? 'active' : ''}`} aria-current={active ? 'page' : undefined}>
               <Icon size={18} aria-hidden="true" />
