@@ -65,9 +65,39 @@ Without `.env.local` the site still renders, but player profiles are disabled.
 | `npm run catalog:import` | Import/refresh the Telugu film catalogue from Wikidata (`-- --dry-run` to preview). Never overwrites edited titles. |
 | `npm run db:seed:dev` | **Local only:** publish sample challenges (today, 3 past days, 1 future) using synthetic audio |
 | `npm run audio:fixtures` | Regenerate the synthetic test clips in `e2e/fixtures/` |
+| `node scripts/admin.mjs …` | Create/reset admin accounts and 2-step verification (see "Running the show") |
 
 First-time e2e setup: `npx playwright install chromium`. Integration and e2e tests
 need the local stack running and `.env.local` generated.
+
+## Running the show (admin)
+
+The admin dashboard lives at **`/admin`**. Players never see it, and it never
+creates player sessions.
+
+1. **Create an admin account.** Run this on the machine that holds the secret key:
+   ```bash
+   node scripts/admin.mjs create you@example.com   # prints a strong password once
+   node scripts/admin.mjs reset you@example.com    # new password (if forgotten)
+   node scripts/admin.mjs reset-2fa you@example.com  # lost phone: remove 2-step verification
+   node scripts/admin.mjs list
+   ```
+   There is no public sign-up, so admins can only be created this way.
+2. **Sign in** at `/admin/login`, then open **Security** and turn on 2-step
+   verification with any authenticator app. After that, a password alone is not
+   enough: the database refuses admin actions until the code is entered.
+   Use a separate browser profile for admin work. Signing in as admin replaces
+   that browser's anonymous player identity.
+3. **Movies & clips:** find the movie (the Wikidata catalogue is already loaded)
+   and add the main cast in billing order. Then upload clips: pick any audio file,
+   choose a 5–20 s section and preview it. The browser re-encodes just that section
+   into a new WebM/Opus file, so no title/artist/album tags survive, and stores it
+   under a random name.
+4. **Schedule:** pick a date, the movie, and a Hard, Medium and Easy clip, then
+   publish. The Overview shows the next 14 days and flags gaps.
+   Once anyone has played a challenge, its date, movie and clips are locked; only
+   its published status can change. The database enforces this too.
+5. **Players:** hide offensive or impersonating display names. Their games are kept.
 
 ## Security model
 
@@ -78,6 +108,9 @@ need the local stack running and `.env.local` generated.
   (`private.before_user_created`) rejects every non-anonymous sign-up. Admins are
   created by the operator with the secret key and `app_metadata.role = 'admin'`,
   which users cannot edit.
+- **Admin 2-step verification is enforced in the database.** `private.is_admin()`
+  requires an `aal2` session whenever the admin has a verified authenticator, so a
+  stolen password alone cannot change anything. Anonymous users are never admins.
 - **Row Level Security on every table.** Nothing is granted by default
   (`auto_expose_new_tables = false`). Players can read the movie catalogue and
   their own profile and plays. Answers (`daily_challenges`), clips and cast are
@@ -140,7 +173,10 @@ utilities on the same element. Retire them as each component is rebuilt.
   private audio with signed URLs, real player (replay, re-listen, buffering and
   error states), progress across refreshes, midnight-IST rule, basic Time Travel,
   Wikidata movie catalogue.
-- [ ] **Phase 3 — Admin:** movies, cast, clip upload (5–20 s, metadata stripped), scheduling.
+- [x] **Phase 3 — Admin:** separate login with optional 2-step verification
+  (enforced by RLS), operator CLI, movies/cast editor, in-browser clip cutter and
+  re-encoder (5–20 s, metadata stripped), scheduling with a played-challenge lock,
+  player moderation.
 - [ ] **Phase 4 — Progress:** streaks, statistics, history, leaderboards, sharing.
 - [ ] **Phase 5 — Time Travel extras** (calendar view, filters).
 - [ ] **Phase 6 — Polish:** PWA install, accessibility and responsive pass, audio visualiser.
