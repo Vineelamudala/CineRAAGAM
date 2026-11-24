@@ -1,29 +1,27 @@
 'use client';
 
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useMediaQuery } from '@/lib/hooks/useMediaQuery';
-import { useStoredValue } from '@/lib/hooks/useStoredValue';
+import { usePlayer } from '@/lib/player/PlayerProvider';
 import { NameModal } from './NameModal';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 
-const NAME_KEY = 'cineraagam:displayName';
-const noopSubscribe = () => () => {};
-
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isMobile = useMediaQuery('(max-width: 620px)');
-  const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
-  const [name, setName] = useStoredValue(NAME_KEY);
+  const player = usePlayer();
   const [menuOpen, setMenuOpen] = useState(false);
   const [nameDismissed, setNameDismissed] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const closeMenuRef = useRef<HTMLButtonElement>(null);
   const openMenuRef = useRef<HTMLButtonElement>(null);
 
-  // Ask for a display name on first visit; "Maybe later" hides it for this visit.
-  const nameModalOpen = editingName || (hydrated && !name && !nameDismissed);
+  // Ask for a display name once the anonymous session is ready and the player
+  // has none yet; "Maybe later" hides it for this visit.
+  const ready = player.status === 'ready';
+  const nameModalOpen = ready && (editingName || (!player.displayName && !nameDismissed));
 
   // Move focus into the mobile menu when it opens, and back when it closes.
   const wasOpen = useRef(false);
@@ -51,7 +49,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         onNavigate={() => setMenuOpen(false)}
         onClose={() => setMenuOpen(false)}
         closeRef={closeMenuRef}
-        playerName={name}
+        playerName={player.displayName}
       />
       {isMobile && menuOpen && (
         <button className="sidebar-backdrop" aria-label="Close menu" tabIndex={-1} onClick={() => setMenuOpen(false)} />
@@ -59,6 +57,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="main-area" inert={isMobile && menuOpen}>
         <Topbar pathname={pathname} onOpenMenu={() => setMenuOpen(true)} onOpenProfile={() => setEditingName(true)} menuRef={openMenuRef} />
+        {player.status === 'error' && (
+          <div role="alert" className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-[#4a2a33] bg-[#1a0f13] px-4 py-3 text-[12px] text-[#f2c4cb]">
+            <span>We couldn’t connect to the Cineraagam server. Your progress won’t be saved until we reconnect.</span>
+            <button onClick={player.retry} className="shrink-0 cursor-pointer rounded-lg border border-[#6b3a46] bg-transparent px-3 py-1.5 text-[11px] font-semibold text-[#ffd9de]">Retry</button>
+          </div>
+        )}
         <main id="main">{children}</main>
         <footer className="footer">
           <span>© {new Date().getFullYear()} CINERAAGAM</span>
@@ -68,8 +72,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {nameModalOpen && (
         <NameModal
-          initialName={name ?? ''}
-          onSave={value => { setName(value); setEditingName(false); }}
+          initialName={player.displayName ?? ''}
+          onSave={async value => {
+            const error = await player.saveDisplayName(value);
+            if (!error) setEditingName(false);
+            return error;
+          }}
           onClose={() => { setNameDismissed(true); setEditingName(false); }}
         />
       )}

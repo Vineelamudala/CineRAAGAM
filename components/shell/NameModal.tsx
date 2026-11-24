@@ -2,24 +2,27 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { AudioLines, X } from 'lucide-react';
-import { DISPLAY_NAME_MAX, normalizeDisplayName, validateDisplayName } from '@/lib/player/displayName';
+import { DISPLAY_NAME_MAX, validateDisplayName } from '@/lib/player/displayName';
 
 type Props = {
   initialName: string;
-  onSave: (name: string) => void;
+  /** Saves the name; resolves to an error message, or null on success. */
+  onSave: (name: string) => Promise<string | null>;
   onClose: () => void;
 };
 
 export function NameModal({ initialName, onSave, onClose }: Props) {
   const [value, setValue] = useState(initialName);
   const [touched, setTouched] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const titleId = useId();
   const errorId = useId();
 
-  const error = validateDisplayName(value);
-  const showError = touched && value.trim() !== '' && error;
+  const localError = validateDisplayName(value);
+  const shownError = serverError ?? (touched && value.trim() !== '' ? localError : null);
 
   // Focus the input on open; restore focus to the previous element on close.
   useEffect(() => {
@@ -28,9 +31,13 @@ export function NameModal({ initialName, onSave, onClose }: Props) {
     return () => previous?.focus?.();
   }, []);
 
-  function submit() {
+  async function submit() {
     setTouched(true);
-    if (!error) onSave(normalizeDisplayName(value));
+    if (localError || saving) return;
+    setSaving(true);
+    const error = await onSave(value);
+    setSaving(false);
+    setServerError(error);
   }
 
   // Escape closes; Tab stays inside the dialog.
@@ -60,16 +67,19 @@ export function NameModal({ initialName, onSave, onClose }: Props) {
             value={value}
             maxLength={DISPLAY_NAME_MAX}
             autoComplete="nickname"
-            onChange={e => setValue(e.target.value)}
+            onChange={e => { setValue(e.target.value); setServerError(null); }}
             onBlur={() => setTouched(true)}
             placeholder="Your name"
-            aria-invalid={showError ? true : undefined}
-            aria-describedby={showError ? errorId : undefined}
+            aria-invalid={shownError ? true : undefined}
+            aria-describedby={shownError ? errorId : undefined}
           />
-          {showError && <p id={errorId} role="alert" className="text-danger! -mt-1! mb-3! text-[11px]!">{error}</p>}
-          <button type="submit" className="submit-button modal-submit" disabled={!value.trim()}>LET’S PLAY <span aria-hidden="true">↗</span></button>
+          {shownError && <p id={errorId} role="alert" className="text-danger! -mt-1! mb-3! text-[11px]!">{shownError}</p>}
+          <button type="submit" className="submit-button modal-submit" disabled={!value.trim() || saving}>
+            {saving ? 'SAVING…' : <>LET’S PLAY <span aria-hidden="true">↗</span></>}
+          </button>
         </form>
         <small>No email. No password. Just your name.</small>
+        <small className="mt-1.5! leading-normal">Your progress is saved in this browser. Clearing browser data or switching devices starts a fresh profile.</small>
         <button className="skip-name" onClick={onClose}>Maybe later</button>
       </div>
     </div>

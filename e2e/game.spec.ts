@@ -86,20 +86,69 @@ test.describe('daily game (demo data)', () => {
   });
 });
 
-test.describe('display name', () => {
-  test('is asked on first visit, validated, saved and remembered', async ({ page }) => {
+const uniqueName = (prefix: string) => `${prefix} ${Math.random().toString(36).slice(2, 7)}`;
+
+test.describe('display name (stored in Supabase)', () => {
+  test('is asked on first visit, validated, saved on the server and remembered', async ({ page }) => {
+    const name = uniqueName('Ravi');
     await page.goto('/');
     const dialog = page.getByRole('dialog', { name: /call you/ });
     await expect(dialog).toBeVisible();
-    await dialog.getByLabel('Display name').fill('<b>');
+    await expect(dialog).toContainText('Clearing browser data');
+    await dialog.getByLabel('Display name', { exact: true }).fill('<b>');
     await dialog.getByRole('button', { name: /LET’S PLAY/ }).click();
     await expect(dialog.getByRole('alert')).toBeVisible();
-    await dialog.getByLabel('Display name').fill('  Ravi   Teja ');
+    await dialog.getByLabel('Display name', { exact: true }).fill(`  ${name.replace(' ', '   ')} `);
     await dialog.getByRole('button', { name: /LET’S PLAY/ }).click();
     await expect(dialog).toBeHidden();
     await page.reload();
+    await expect(page.locator('.profile-copy strong')).toHaveText(name);
     await expect(page.getByRole('dialog')).toBeHidden();
-    await expect(page.getByText('Ravi Teja').first()).toBeAttached();
+  });
+
+  test('a name already taken by another player is rejected', async ({ page, browser }) => {
+    const name = uniqueName('Taken');
+    const other = await browser.newContext();
+    const otherPage = await other.newPage();
+    await otherPage.goto('/');
+    await otherPage.getByLabel('Display name', { exact: true }).fill(name);
+    await otherPage.getByRole('button', { name: /LET’S PLAY/ }).click();
+    await expect(otherPage.getByRole('dialog')).toBeHidden();
+    await other.close();
+
+    await page.goto('/');
+    await page.getByLabel('Display name', { exact: true }).fill(name.toUpperCase());
+    await page.getByRole('button', { name: /LET’S PLAY/ }).click();
+    await expect(page.getByRole('dialog').getByRole('alert')).toContainText('already taken');
+  });
+
+  test('each browser is its own anonymous player (no login needed)', async ({ page, browser }) => {
+    const name = uniqueName('Solo');
+    await page.goto('/');
+    await page.getByLabel('Display name', { exact: true }).fill(name);
+    await page.getByRole('button', { name: /LET’S PLAY/ }).click();
+    await expect(page.locator('.profile-copy strong')).toHaveText(name);
+
+    const fresh = await browser.newContext();
+    const freshPage = await fresh.newPage();
+    await freshPage.goto('/');
+    await expect(freshPage.getByRole('dialog', { name: /call you/ })).toBeVisible();
+    await expect(freshPage.locator('.profile-copy strong')).toHaveText('Guest Player');
+    await fresh.close();
+  });
+
+  test('the profile button lets a player change their name', async ({ page }) => {
+    const first = uniqueName('First');
+    const second = uniqueName('Second');
+    await page.goto('/');
+    await page.getByLabel('Display name', { exact: true }).fill(first);
+    await page.getByRole('button', { name: /LET’S PLAY/ }).click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await page.getByRole('button', { name: 'Edit display name' }).click();
+    await expect(page.getByLabel('Display name', { exact: true })).toHaveValue(first);
+    await page.getByLabel('Display name', { exact: true }).fill(second);
+    await page.getByRole('button', { name: /LET’S PLAY/ }).click();
+    await expect(page.locator('.profile-copy strong')).toHaveText(second);
   });
 
   test('Escape closes the dialog', async ({ page }) => {

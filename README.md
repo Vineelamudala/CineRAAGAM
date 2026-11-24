@@ -29,12 +29,19 @@ Free and open-source stack, self-hostable, no player logins.
 
 ## Run locally
 
-Requires **Node.js 24**.
+Requires **Node.js 24** and **Docker** (for the local Supabase stack).
 
 ```bash
 npm install
+npm run db:start       # local Supabase in Docker (first run downloads images)
+npm run env:local      # writes .env.local from the running stack
 npm run dev            # http://localhost:3000
 ```
+
+Supabase Studio (database UI) runs at http://127.0.0.1:54323. Stop the stack with
+`npm run db:stop`. `npm run db:reset` re-applies all migrations and `supabase/seed.sql`.
+
+Without `.env.local` the site still renders, but player profiles are disabled.
 
 ### Scripts
 
@@ -45,10 +52,38 @@ npm run dev            # http://localhost:3000
 | `npm run lint` | ESLint (Next.js core-web-vitals + TypeScript rules) |
 | `npm run typecheck` | TypeScript, no emit |
 | `npm test` | Unit tests (Vitest): rules, points, IST time, search, share text, names |
+| `npm run test:db` | Database tests (pgTAP): RLS, grants, constraints, points rule, names |
+| `npm run test:integration` | Auth + API tests against the local stack (Vitest + supabase-js) |
 | `npm run test:e2e` | End-to-end tests (Playwright, desktop + mobile); run `npm run build` first |
 | `npm run check` | lint + typecheck + unit tests |
+| `npm run db:start` / `db:stop` / `db:reset` | Local Supabase stack |
+| `npm run env:local` | Generate `.env.local` from `supabase status` |
 
-First-time e2e setup: `npx playwright install chromium`.
+First-time e2e setup: `npx playwright install chromium`. Integration and e2e tests
+need the local stack running and `.env.local` generated.
+
+## Security model
+
+- **Players are anonymous Supabase users.** The browser creates the session on the
+  first visit, so bots don't create accounts and rate limits apply per visitor. The
+  proxy (`proxy.ts`) refreshes it and sets the auth cookies from the server.
+- **No player sign-up of any other kind.** An auth hook
+  (`private.before_user_created`) rejects every non-anonymous sign-up. Admins are
+  created by the operator with the secret key and `app_metadata.role = 'admin'`,
+  which users cannot edit.
+- **Row Level Security on every table.** Nothing is granted by default
+  (`auto_expose_new_tables = false`). Players can read the movie catalogue and
+  their own profile and plays. Answers (`daily_challenges`), clips and cast are
+  admin-only.
+- **Players never write game tables directly.** Points are enforced by a database
+  CHECK constraint (3/2/1/0), and there is one play per player per challenge and
+  one guess per clue.
+- **Audio** lives in a private bucket under opaque UUID file names.
+- **Secrets:** only `NEXT_PUBLIC_SUPABASE_URL` and the publishable key reach the
+  browser. `SUPABASE_SECRET_KEY` is server/test-only and never `NEXT_PUBLIC_`.
+- A Content-Security-Policy restricts the page to our origin and the Supabase origin.
+
+Schema and policies live in `supabase/migrations/`, and their tests in `supabase/tests/`.
 
 ## Project layout
 
@@ -80,7 +115,7 @@ utilities on the same element. Retire them as each component is rebuilt.
 - [x] **Phase 0 — Foundation:** Next.js 16 / React 19 security upgrade, Tailwind v4,
   ESLint, Vitest, Playwright, real routes, 3/2/1/0 points, accessible autocomplete
   and dialogs, self-hosted fonts, live IST countdown.
-- [ ] **Phase 1 — Supabase:** local stack, schema migrations, RLS, pgTAP tests,
+- [x] **Phase 1 — Supabase:** local stack, schema migrations, RLS, pgTAP tests,
   silent anonymous auth, display name stored server-side.
 - [ ] **Phase 2 — Daily game:** server-validated guesses (Postgres functions),
   private audio with signed URLs, real player, Wikidata movie catalogue.

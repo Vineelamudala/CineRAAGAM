@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { AppShell } from '@/components/shell/AppShell';
+import { PlayerProvider } from '@/lib/player/PlayerProvider';
 import { dmMono, dmSans, playfair } from './fonts';
 import './globals.css';
 
@@ -21,7 +22,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className={`${dmSans.variable} ${dmMono.variable} ${playfair.variable}`}>
       <body>
-        <AppShell>{children}</AppShell>
+        <PlayerProvider>
+          <AppShell>{children}</AppShell>
+        </PlayerProvider>
       </body>
     </html>
   );

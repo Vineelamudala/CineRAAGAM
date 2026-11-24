@@ -5,6 +5,10 @@ const PORT = Number(process.env.E2E_PORT ?? 3100);
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
+  // The local Supabase stack, the Next server and the browsers share one machine;
+  // too many parallel browsers starve the CPU and make timing-based waits flaky.
+  workers: 3,
+  expect: { timeout: 10_000 },
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
   use: { baseURL: `http://localhost:${PORT}`, trace: 'retain-on-failure' },

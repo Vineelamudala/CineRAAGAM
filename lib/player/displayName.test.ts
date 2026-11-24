@@ -18,6 +18,11 @@ describe('display name', () => {
     expect(validateDisplayName('x'.repeat(20))).toBeNull();
   });
 
+  it('rejects other scripts and accented letters (kept identical to the database rule)', () => {
+    expect(validateDisplayName('Café')).not.toBeNull();
+    expect(validateDisplayName('рави')).not.toBeNull();
+  });
+
   it('rejects markup, URLs and emoji', () => {
     expect(validateDisplayName('<script>')).not.toBeNull();
     expect(validateDisplayName('http://x.y')).not.toBeNull();
