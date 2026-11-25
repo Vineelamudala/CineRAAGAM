@@ -123,7 +123,7 @@ export function TimeTravelList() {
                     const c = byDate.get(date);
                     const day = Number(date.slice(8));
                     if (!c) {
-                      return <td key={j}><span className="grid aspect-square place-items-center rounded-xl text-[12px] text-muted/40">{day}</span></td>;
+                      return <td key={j}><span className="grid aspect-square place-items-center rounded-xl text-[12px] text-muted" title="No show on this day">{day}</span></td>;
                     }
                     const d = describe(c);
                     const dim = !matches(c, filter);

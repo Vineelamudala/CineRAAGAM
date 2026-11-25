@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Headphones, Loader2, Music2, Play, RotateCcw, Volume2 } from 'lucide-react';
+import { startVisualizer } from '@/lib/audio/visualizer';
 import { signClipUrl } from '@/lib/game/api';
 import { getBrowserSupabase } from '@/lib/supabase/browser';
 
@@ -32,6 +33,16 @@ export function AudioPanel({ clue, path, durationMs, kind }: Props) {
   const [status, setStatus] = useState<Status>('loading');
   const [time, setTime] = useState(0);
   const [attempt, setAttempt] = useState(0);
+  const [live, setLive] = useState(false);
+  const waveRef = useRef<HTMLDivElement>(null);
+  const stopVizRef = useRef<(() => void) | null>(null);
+
+  function stopViz() {
+    stopVizRef.current?.();
+    stopVizRef.current = null;
+    setLive(false);
+  }
+  useEffect(() => () => { stopVizRef.current?.(); }, []);
 
   useEffect(() => {
     const supabase = getBrowserSupabase();
@@ -50,6 +61,11 @@ export function AudioPanel({ clue, path, durationMs, kind }: Props) {
     const audio = audioRef.current;
     if (!audio || !src) return;
     if (fromStart) audio.currentTime = 0;
+    // Start the live visualiser from this user gesture (browsers require one for Web Audio).
+    if (!stopVizRef.current && waveRef.current) {
+      stopVizRef.current = await startVisualizer(audio, Array.from(waveRef.current.querySelectorAll('i')));
+      setLive(!!stopVizRef.current);
+    }
     try {
       await audio.play();
     } catch (err) {
@@ -80,7 +96,7 @@ export function AudioPanel({ clue, path, durationMs, kind }: Props) {
   };
 
   return (
-    <div className={`audio-panel ${playing ? 'is-playing' : ''}`}>
+    <div className={`audio-panel ${playing ? 'is-playing' : ''} ${live ? 'is-live' : ''}`}>
       <div className="audio-panel-top">
         <div className="audio-kicker"><span className="sound-pulse" aria-hidden="true" /> NOW PLAYING · CLUE 0{clue} · {kind === 'bgm' ? 'BGM' : 'SONG INTERLUDE'}</div>
         <span className="clip-duration">{`${Math.floor(durationSec / 60)}:${String(Math.round(durationSec % 60)).padStart(2, '0')}`}</span>
@@ -89,7 +105,7 @@ export function AudioPanel({ clue, path, durationMs, kind }: Props) {
         <div className="art-glow glow-one" />
         <div className="art-glow glow-two" />
         <div className="vinyl"><div className="vinyl-inner"><Music2 size={25} /></div></div>
-        <div className="waveform">
+        <div className="waveform" ref={waveRef}>
           {BARS.map((b, i) => <i key={i} style={{ height: `${b.height}%`, opacity: b.opacity, animationDelay: `${b.delay}s` }} />)}
         </div>
         <div className="art-caption">A SOUND FROM THE SILVER SCREEN</div>
@@ -99,12 +115,13 @@ export function AudioPanel({ clue, path, durationMs, kind }: Props) {
         <audio
           ref={audioRef}
           src={src}
+          crossOrigin="anonymous"
           preload="auto"
           onCanPlay={() => setStatus(s => (s === 'loading' ? 'ready' : s))}
           onPlaying={() => setStatus('playing')}
           onWaiting={() => setStatus('buffering')}
-          onPause={() => setStatus(s => (s === 'error' ? s : 'ready'))}
-          onEnded={() => { setStatus('ready'); setTime(0); }}
+          onPause={() => { stopViz(); setStatus(s => (s === 'error' ? s : 'ready')); }}
+          onEnded={() => { stopViz(); setStatus('ready'); setTime(0); }}
           onTimeUpdate={e => setTime(e.currentTarget.currentTime)}
           onError={() => setStatus('error')}
         />

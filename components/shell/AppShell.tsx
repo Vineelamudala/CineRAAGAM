@@ -49,6 +49,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="app-shell">
+      <a href="#main" className="skip-link">Skip to main content</a>
       <Sidebar
         pathname={pathname}
         open={menuOpen}
@@ -72,7 +73,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <button onClick={player.retry} className="shrink-0 cursor-pointer rounded-lg border border-[#6b3a46] bg-transparent px-3 py-1.5 text-[11px] font-semibold text-[#ffd9de]">Retry</button>
           </div>
         )}
-        <main id="main">{children}</main>
+        <main id="main" tabIndex={-1} className="outline-none">{children}</main>
         <footer className="footer">
           <span>© {new Date().getFullYear()} CINERAAGAM</span>
           <span>MADE FOR THE LOVE OF TELUGU CINEMA <span className="footer-heart" aria-hidden="true">♥</span></span>

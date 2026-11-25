@@ -41,7 +41,11 @@ const nextConfig = {
   // Self-contained server bundle for the Docker image (Phase 7).
   output: 'standalone',
   async headers() {
-    return [{ source: '/:path*', headers: securityHeaders }];
+    return [
+      { source: '/:path*', headers: securityHeaders },
+      // Browsers must always fetch the latest service worker.
+      { source: '/sw.js', headers: [{ key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' }] },
+    ];
   },
 };
 

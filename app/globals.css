@@ -5,6 +5,7 @@
 @import 'tailwindcss/utilities.css' layer(utilities);
 @import './styles/legacy.css';
 @import './styles/cinema.css';
+@import './styles/readability.css';
 
 /* Accent colour for the whole app. Every accent shade (text, glows, borders,
    tinted near-black panels) is derived from these two values:
@@ -75,6 +76,14 @@ a.nav-item, .bottom-strip > a { text-decoration: none; }
 }
 .rail-link { display: block; text-decoration: none; }
 .placeholder-page .submit-button { display: inline-flex; align-items: center; text-decoration: none; }
+
+/* Skip link: hidden until focused with the keyboard. */
+.skip-link { position: fixed; left: 12px; top: -60px; z-index: 50; padding: 10px 16px; border-radius: 10px; background: var(--color-text); color: var(--color-bg); font-weight: 700; font-size: 13px; text-decoration: none; transition: top .15s; }
+.skip-link:focus { top: 12px; }
+
+/* PWA install button in the sidebar. */
+.install-button { display: flex; width: 100%; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; padding: 10px; border-radius: 12px; border: 1px solid var(--color-line); background: transparent; color: var(--color-text); font-size: 12px; font-weight: 600; cursor: pointer; }
+.install-button:hover { border-color: var(--color-muted); }
 
 /* Visually hidden but available to screen readers. */
 .sr-only-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

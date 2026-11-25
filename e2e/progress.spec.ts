@@ -65,6 +65,7 @@ test('history links missed days to Time Travel', async ({ page }) => {
   await page.getByRole('dialog').getByRole('button', { name: 'Maybe later' }).click();
   // Play a past day so history starts before today.
   await page.goto('/time-travel');
+  await page.getByRole('button', { name: 'List view' }).click(); // list is newest-first: last = oldest day
   await page.getByRole('link', { name: /#\d+/ }).last().click();
   await page.getByRole('button', { name: /Skip this clue/ }).click();
   await expect(page.locator('.clue-badge')).toContainText('Medium'); // wait until the server recorded it

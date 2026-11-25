@@ -38,6 +38,6 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // Skip static files, images and the manifest.
-    '/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp3|ogg|woff2?)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|robots.txt|api/catalog|offline|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp3|ogg|woff2?)$).*)',
   ],
 };

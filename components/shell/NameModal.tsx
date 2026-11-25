@@ -24,11 +24,15 @@ export function NameModal({ initialName, onSave, onClose }: Props) {
   const localError = validateDisplayName(value);
   const shownError = serverError ?? (touched && value.trim() !== '' ? localError : null);
 
-  // Focus the input on open; restore focus to the previous element on close.
+  // Focus the input on open; on close, restore focus to the previous element,
+  // or to the main content when nothing had focus (e.g. the first-visit prompt).
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     inputRef.current?.focus();
-    return () => previous?.focus?.();
+    return () => {
+      const target = previous && previous !== document.body && previous.isConnected ? previous : document.getElementById('main');
+      target?.focus({ preventScroll: true });
+    };
   }, []);
 
   async function submit() {

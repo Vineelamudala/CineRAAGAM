@@ -1,0 +1,39 @@
+/* ==========================================================
+   Readability floor (Phase 6 accessibility pass)
+   The prototype used 7–9px text in many places. These rules raise the
+   minimum without changing the layout:
+     - letter-spaced uppercase labels: >= 10px
+     - helper / body text: >= 11px, feedback the player must read: 12px
+   Loaded last so it wins over the prototype's desktop and mobile rules.
+   ========================================================== */
+
+/* Uppercase, letter-spaced labels */
+.art-caption, .quote-card > span, .audio-kicker, .bottom-strip-title, .brand-tag,
+.challenge-label, .clip-step, .countdown-label, .difficulty-wrap > span, .guess-section > label,
+.guess-section label, .rail-title, .result-score span, .breadcrumb, .eyebrow, .side-label,
+.streak-top, .reveal-eyebrow, .step-number, .week-days > div, .week-days span, .streak-days span,
+.clip-duration, .game-footnote, .footer {
+  font-size: 10px;
+}
+
+/* The brand tagline must stay on one line at its larger size. */
+.brand-tag { white-space: nowrap; letter-spacing: 0.16em; }
+
+/* Helper and body text */
+.audio-note, .bottom-strip > button small, .bottom-strip > a small, .countdown-foot,
+.guess-footer, .mini-stat span, .name-modal small, .profile-copy span, .rail-link,
+.replay-button, .skip-button, .track-meta, .week-card p, .streak-note, .empty-state p, .rule-card p {
+  font-size: 11px;
+}
+
+/* Text the player must read to play */
+.feedback-message, .reveal-cast { font-size: 12px; }
+.submit-button, .share-button { font-size: 11px; }
+.bottom-strip > a strong, .bottom-strip > button strong { font-size: 12px; }
+.mini-stat strong { font-size: 13px; }
+.clue-badge strong { font-size: 11px; }
+
+/* Keep tiny footers readable on phones too */
+@media (max-width: 620px) {
+  .footer, .game-footnote { font-size: 10px; line-height: 1.5; }
+}

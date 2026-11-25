@@ -160,6 +160,8 @@ ol.clip-progress {
 .audio-panel.is-playing .vinyl { animation-play-state: running; }
 .waveform i { transform-origin: center; }
 .audio-panel.is-playing .waveform i { animation: barPulse 0.85s ease-in-out infinite alternate; }
+/* Live visualiser drives the bars directly from the audio spectrum. */
+.audio-panel.is-live .waveform i { animation: none; transition: transform 70ms linear; }
 @keyframes barPulse { from { transform: scaleY(0.45); } to { transform: scaleY(1.08); } }
 
 /* Clue steps: wrong/skipped clues are muted; unlocked clues can be replayed. */

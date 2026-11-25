@@ -68,6 +68,7 @@ Without `.env.local` the site still renders, but player profiles are disabled.
 | `npm run catalog:import` | Import/refresh the Telugu film catalogue from Wikidata (`-- --dry-run` to preview). Never overwrites edited titles. |
 | `npm run db:seed:dev` | **Local only:** publish sample challenges (today, 3 past days, 1 future) using synthetic audio |
 | `npm run audio:fixtures` | Regenerate the synthetic test clips in `e2e/fixtures/` |
+| `node scripts/generate-icons.mjs` | Re-render the app icons from `public/icons/icon.svg` |
 | `node scripts/admin.mjs …` | Create/reset admin accounts and 2-step verification (see "Running the show") |
 
 First-time e2e setup: `npx playwright install chromium`. Integration and e2e tests
@@ -184,5 +185,8 @@ utilities on the same element. Retire them as each component is rebuilt.
   solved-on chart, My History, weekly/monthly/all-time leaderboards, live sidebar
   and right-rail stats, streak in the share text.
 - [x] **Phase 5 — Time Travel extras:** month calendar with results, filters (not played / in progress / solved / missed), list view, "Surprise me".
-- [ ] **Phase 6 — Polish:** PWA install, accessibility and responsive pass, audio visualiser.
+- [x] **Phase 6 — Polish:** installable PWA (icons, manifest, conservative service
+  worker, offline page, install button), live Web Audio visualiser, cached compact
+  catalogue endpoint (/api/catalog), accessibility pass (axe-core audit clean on every
+  page, skip link, focus handling, readable minimum text sizes), robots.txt, social metadata.
 - [ ] **Phase 7 — Production:** Docker Compose (app + self-hosted Supabase + Caddy), backups.

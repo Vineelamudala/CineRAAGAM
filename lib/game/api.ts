@@ -130,9 +130,23 @@ export async function signClipUrl(supabase: SupabaseClient, path: string): Promi
 // The catalogue rarely changes during a visit: fetch it once per page load.
 let catalogPromise: Promise<MovieOption[]> | null = null;
 
-/** All active movies for autocomplete (paged: the API returns at most 1000 rows per request). */
+type CatalogRow = [string, string, number | null, string[]?];
+
+/** Parse the compact /api/catalog format. */
+export function parseCatalog(rows: CatalogRow[]): MovieOption[] {
+  return rows.map(([id, title, year, aliases]) => ({ id, title, year: year ?? undefined, aliases: aliases ?? [] }));
+}
+
+/**
+ * All active movies for autocomplete. Uses the cached /api/catalog endpoint
+ * (one small gzipped response); falls back to paged database reads.
+ */
 export function fetchCatalog(supabase: SupabaseClient): Promise<MovieOption[]> {
   catalogPromise ??= (async () => {
+    try {
+      const res = await fetch('/api/catalog');
+      if (res.ok) return parseCatalog(await res.json());
+    } catch { /* fall back below */ }
     const pageSize = 1000;
     const all: MovieOption[] = [];
     for (let from = 0; ; from += pageSize) {
