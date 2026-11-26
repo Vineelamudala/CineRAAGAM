@@ -62,6 +62,7 @@ export function NameModal({ initialName, onSave, onClose }: Props) {
         <div className="brand-mark modal-mark" aria-hidden="true"><AudioLines size={22} /></div>
         <div className="eyebrow centered">WELCOME TO CINERAAGAM</div>
         <h2 id={titleId}>What should we<br /><em>call you?</em></h2>
+        <p>Every day, <strong>3 BGMs / song interludes</strong> from one Telugu movie are played one by one. Guess the movie!</p>
         <p>Choose a display name for your player profile and leaderboard.</p>
         <form onSubmit={e => { e.preventDefault(); submit(); }} noValidate>
           <label htmlFor="display-name" className="sr-only-live">Display name</label>

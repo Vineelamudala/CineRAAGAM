@@ -16,7 +16,7 @@ export default function HowToPlayPage() {
     <section className="placeholder-page">
       <div className="eyebrow"><span className="eyebrow-line" aria-hidden="true" /> CINERAAGAM</div>
       <h1>How to play</h1>
-      <p className="welcome-copy">Three clues, from hard to easy. One Telugu movie to identify.</p>
+      <p className="welcome-copy">Every day, 3 BGMs / song interludes from one Telugu movie are played one by one, from hard to easy. Identify the movie!</p>
       <ol className="rules-grid list-none p-0">
         {RULES.map(([n, title, text]) => (
           <li className="rule-card" key={n}>

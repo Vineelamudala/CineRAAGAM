@@ -140,6 +140,10 @@ export function DailyGame({ date }: { date?: string }) {
         )}
       </div>
 
+      <p className="m-0 mt-3 text-[12px] leading-relaxed text-muted">
+        <strong className="text-text">3 BGMs / song interludes</strong> from one Telugu movie, played one by one, from hard to easy. Guess the movie!
+      </p>
+
       {timeTravel && (
         <p className="m-0 mt-3 text-[11px] text-muted">Time Travel is just for fun: no points, and it never affects leaderboards or streaks.</p>
       )}
