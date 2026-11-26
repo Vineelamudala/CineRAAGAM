@@ -75,7 +75,8 @@ a.nav-item, .bottom-strip > a { text-decoration: none; }
   .bottom-strip > a, .bottom-strip > a:first-of-type { border-left: 0; border-top: 1px solid hsl(calc(var(--accent-h) - 2) calc(11.6% * var(--accent-s)) 16.9%); padding: 12px 0 5px; }
 }
 .rail-link { display: block; text-decoration: none; }
-.placeholder-page .submit-button { display: inline-flex; align-items: center; text-decoration: none; }
+/* Links styled as the main button (e.g. "TIME TRAVEL ↗" on an empty day) need a box to get the button's height. */
+a.submit-button { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
 
 /* Skip link: hidden until focused with the keyboard. */
 /* Centred so that, while focused, it never covers the menu button in the top-left corner. */
