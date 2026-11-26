@@ -8,7 +8,7 @@ export default function LeaderboardPage() {
     <section className="placeholder-page">
       <div className="eyebrow"><span className="eyebrow-line" aria-hidden="true" /> CINERAAGAM</div>
       <h1>The leaderboard</h1>
-      <p className="welcome-copy">Weekly, monthly and all-time rankings from the official daily challenges.</p>
+      <p className="welcome-copy">Weekly and all-time rankings from the official daily challenges.</p>
       <LeaderboardView />
     </section>
   );

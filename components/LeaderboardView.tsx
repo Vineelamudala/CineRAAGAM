@@ -9,7 +9,6 @@ import { getBrowserSupabase } from '@/lib/supabase/browser';
 
 const TABS: { id: LeaderboardPeriod; label: string; hint: string }[] = [
   { id: 'week', label: 'This week', hint: 'Since Monday 00:00 IST' },
-  { id: 'month', label: 'This month', hint: 'Since the 1st, 00:00 IST' },
   { id: 'all', label: 'All time', hint: 'Every daily challenge' },
 ];
 

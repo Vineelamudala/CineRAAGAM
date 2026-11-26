@@ -238,13 +238,13 @@ test.describe('navigation', () => {
   test('every section has its own URL', async ({ page, isMobile }) => {
     await page.goto('/');
     await skipName(page);
-    for (const [label, path] of [['Time Travel', '/time-travel'], ['Leaderboard', '/leaderboard'], ['Statistics', '/stats'], ['My History', '/history'], ['How to Play', '/how-to-play']]) {
+    for (const [label, path] of [['Time Travel', '/time-travel'], ['Leaderboard', '/leaderboard'], ['Your Stats', '/stats'], ['How to Play', '/how-to-play']]) {
       if (isMobile) await page.getByRole('button', { name: 'Open menu' }).click();
       await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: label }).click();
       await expect(page).toHaveURL(path);
     }
     await page.goBack();
-    await expect(page).toHaveURL('/history');
+    await expect(page).toHaveURL('/stats');
   });
 
   test('closed mobile menu is not reachable by keyboard', async ({ page, isMobile }) => {

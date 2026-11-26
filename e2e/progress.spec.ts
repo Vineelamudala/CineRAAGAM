@@ -40,11 +40,19 @@ test('solving today updates streak, stats, leaderboard and history', async ({ pa
   await expect(page.locator('.top-streak strong')).toHaveText('1');
   await expect(page.getByRole('listitem', { name: /: solved$/ }).first()).toBeAttached();
 
-  // Statistics page
-  await goTo(page, isMobile, 'Statistics');
-  await expect(page.getByText('Win rate', { exact: true })).toBeVisible();
-  await expect(page.getByText('1 of 1 solved')).toBeVisible();
+  // Your Stats page: all stats in one place
+  await goTo(page, isMobile, 'Your Stats');
+  const tile = (label: string) => page.getByRole('region', { name: 'Totals' }).locator('div', { has: page.getByText(label, { exact: true }) }).last();
+  await expect(tile('Games played')).toContainText('1');
+  await expect(tile('Wins')).toContainText('1');
+  await expect(tile('Win rate')).toContainText('100%');
+  await expect(tile('Avg clues to solve')).toContainText('1');
+  await expect(tile('Total points')).toContainText('3');
+  await expect(tile('Average points')).toContainText('3');
   await expect(page.getByLabel('Solved on clue 1: 1 game, 100%')).toBeVisible();
+  // Daily history (same page): today shows the movie, result and points
+  const todayRow = page.getByRole('list', { name: 'Daily history' }).getByRole('listitem').filter({ hasText: ANSWER }).first();
+  await expect(todayRow).toContainText('Won · 1 clue · 3 pts');
 
   // Leaderboard: I'm on this week's board with 3 points
   await goTo(page, isMobile, 'Leaderboard');
@@ -52,13 +60,9 @@ test('solving today updates streak, stats, leaderboard and history', async ({ pa
   await expect(myRow).toBeVisible();
   await expect(myRow).toContainText('(you)');
   await expect(myRow.getByRole('cell').nth(2)).toHaveText('3');
+  await expect(page.getByRole('tab')).toHaveText(['This week', 'All time']); // no monthly board
   await page.getByRole('tab', { name: 'All time' }).click();
   await expect(page.getByRole('row').filter({ hasText: name })).toBeVisible();
-
-  // History: today shows the movie and the result; earlier days point to Time Travel
-  await goTo(page, isMobile, 'My History');
-  const todayRow = page.getByRole('listitem').filter({ hasText: ANSWER }).first();
-  await expect(todayRow).toContainText('Solved on clue 1 · 3 pts');
 });
 
 test('statistics popup: Played / Won / Win % / Points / streaks / distribution, reopened from the top bar', async ({ page }) => {
@@ -128,7 +132,8 @@ test('history links missed days to Time Travel', async ({ page }) => {
   await page.getByRole('link', { name: /#\d+/ }).last().click();
   await page.getByRole('button', { name: /Skip this clue/ }).click();
   await expect(page.locator('.clue-badge')).toContainText('Medium'); // wait until the server recorded it
-  await page.goto('/history');
+  await page.goto('/history'); // old address still works: redirects to the stats page
+  await expect(page).toHaveURL(/\/stats#history$/);
   await expect(page.getByRole('link', { name: /play in Time Travel/ }).first()).toBeVisible();
   await expect(page.getByRole('link', { name: /In progress — continue/ })).toBeVisible();
 });

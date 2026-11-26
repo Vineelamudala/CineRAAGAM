@@ -142,6 +142,15 @@ select is(public.get_my_history() -> 0 ->> 'date', (select t::text from d), 'new
 select is(public.get_my_history() -> 0 ->> 'title', null, 'an unfinished game does not reveal the movie in history');
 select is(public.get_my_history() -> 1 ->> 'title', 'Answer Movie', 'finished games show the movie');
 select is((public.get_my_history() -> 1 ->> 'points')::int, 3, 'and the points earned');
+select is(public.get_my_history() -> 0 -> 'results', '[]'::jsonb, 'an unplayed day has no clue results');
+reset role;
+-- Give Alice's yesterday play real guesses: wrong, then correct on clue 2.
+insert into public.guesses (play_id, clue_number, movie_id, is_correct)
+select p.id, x.n, x.m, x.ok from public.plays p, d,
+  (values (1, null::uuid, false), (2, '11111111-0000-0000-0000-000000000001'::uuid, true)) x(n, m, ok)
+where p.user_id = 'a0000000-0000-0000-0000-00000000000a' and p.challenge_date = d.t - 1;
+set local role authenticated;
+select is(public.get_my_history() -> 1 -> 'results', '["skipped", "correct"]'::jsonb, 'history lists each clue''s result in order');
 reset role;
 
 -- ---------- signed-out ----------

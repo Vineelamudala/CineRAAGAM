@@ -69,6 +69,8 @@ export type HistoryEntry = {
   points: number | null;
   solved_on_clue: number | null;
   clues_used: number;
+  /** Result of each clue played, in order. */
+  results: ('correct' | 'wrong' | 'skipped')[];
   title: string | null;
   year: number | null;
 };

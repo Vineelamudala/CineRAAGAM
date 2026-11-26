@@ -24,7 +24,7 @@ Free and open-source stack, self-hostable, no player logins.
 - A new challenge starts at **00:00 IST**. A daily game must be finished that day:
   after midnight an unfinished game turns into a Time Travel game (0 leaderboard
   points, streak not extended), which you can still finish for fun (no points).
-- **Leaderboards:** weekly (resets Monday 00:00 IST), monthly and all-time, by points.
+- **Leaderboards:** weekly (resets Monday 00:00 IST) and all-time, by points.
   Ties go to more days solved, then to whoever reached the total first. Only named,
   non-hidden players appear; admins are left out.
 - **Time Travel:** replay past days just for fun. Time Travel gives **no points**
@@ -187,7 +187,7 @@ utilities on the same element. Retire them as each component is rebuilt.
   re-encoder (5–20 s, metadata stripped), scheduling with a played-challenge lock,
   player moderation.
 - [x] **Phase 4 — Progress:** streaks (in challenge days), statistics with a
-  solved-on chart, My History, weekly/monthly/all-time leaderboards, live sidebar
+  guess distribution, daily history (all on one Your Stats page), weekly and all-time leaderboards, live sidebar
   and right-rail stats, streak in the share text.
 - [x] **Phase 5 — Time Travel extras:** month calendar with results, filters (not played / in progress / solved / missed), list view, "Surprise me".
 - [x] **Phase 6 — Polish:** installable PWA (icons, manifest, conservative service

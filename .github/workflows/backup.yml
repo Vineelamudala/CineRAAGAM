@@ -49,7 +49,8 @@ jobs:
 
       - name: Keep the free project awake
         if: steps.cfg.outputs.enabled == 'true'
-        run: curl -fsS "$SUPABASE_URL/rest/v1/movies?select=id&limit=1" -H "apikey: $SUPABASE_PUBLISHABLE_KEY" -o /dev/null
+        run: |
+          curl -fsS "$SUPABASE_URL/rest/v1/movies?select=id&limit=1" -H "apikey: $SUPABASE_PUBLISHABLE_KEY" -o /dev/null
 
       - uses: actions/checkout@v4
         if: steps.cfg.outputs.enabled == 'true'

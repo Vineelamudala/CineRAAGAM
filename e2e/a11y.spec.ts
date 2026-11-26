@@ -9,8 +9,7 @@ const PAGES = [
   { name: 'Today', path: '/', ready: (p: Page) => p.getByRole('button', { name: 'Play clue', exact: true }).waitFor() },
   { name: 'Time Travel', path: '/time-travel', ready: (p: Page) => p.getByRole('region', { name: 'Calendar' }).waitFor() },
   { name: 'Leaderboard', path: '/leaderboard', ready: (p: Page) => p.getByRole('tabpanel').waitFor() },
-  { name: 'Statistics', path: '/stats', ready: (p: Page) => p.getByText('Current streak', { exact: true }).waitFor() },
-  { name: 'My History', path: '/history', ready: (p: Page) => p.getByRole('heading', { name: 'Your game history' }).waitFor() },
+  { name: 'Your Stats', path: '/stats', ready: (p: Page) => p.getByRole('heading', { name: 'Daily history' }).waitFor() },
   { name: 'How to Play', path: '/how-to-play', ready: (p: Page) => p.getByRole('heading', { name: 'How to play' }).waitFor() },
 ];
 
