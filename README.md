@@ -191,7 +191,7 @@ utilities on the same element. Retire them as each component is rebuilt.
   and right-rail stats, streak in the share text.
 - [x] **Phase 5 — Time Travel extras:** month calendar with results, filters (not played / in progress / solved / missed), list view, "Surprise me".
 - [x] **Phase 6 — Polish:** installable PWA (icons, manifest, conservative service
-  worker, offline page, install button), live Web Audio visualiser, cached compact
+  worker, offline page), live Web Audio visualiser, cached compact
   catalogue endpoint (/api/catalog), accessibility pass (axe-core audit clean on every
   page, skip link, focus handling, readable minimum text sizes), robots.txt, social metadata.
 - [x] **Phase 7 — Production:** Docker Compose with the app, a trimmed self-hosted

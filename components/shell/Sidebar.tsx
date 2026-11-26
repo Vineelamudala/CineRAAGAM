@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { AudioLines, Flame, UserRound, X } from 'lucide-react';
 import type { Ref } from 'react';
-import { InstallButton } from '@/components/pwa/InstallButton';
 import { SidebarWeek } from '@/components/WeekStrip';
 import type { MyStats } from '@/lib/game/api';
 import { NAV_ITEMS, isActiveNav } from '@/lib/nav';
@@ -43,7 +42,6 @@ export function Sidebar({ pathname, open, inert, onNavigate, onClose, closeRef, 
       </nav>
 
       <div className="sidebar-bottom">
-        <InstallButton />
         <div className="streak-card">
           <div className="streak-top"><span className="streak-icon"><Flame size={17} aria-hidden="true" /></span><span>YOUR STREAK</span></div>
           <div className="streak-number">{stats ? String(stats.current_streak).padStart(2, '0') : '––'} <small>{stats?.current_streak === 1 ? 'day' : 'days'}</small></div>
