@@ -1,8 +1,12 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CalendarDays, CircleHelp, ListMusic, Trophy } from 'lucide-react';
 import { Countdown } from '@/components/Countdown';
 import { DailyGame } from '@/components/game/DailyGame';
 import { RightRail } from '@/components/RightRail';
+
+// The home page is the one main address search engines should show.
+export const metadata: Metadata = { alternates: { canonical: '/' } };
 
 const MORE_WAYS = [
   { href: '/time-travel', icon: CalendarDays, title: 'Time Travel', text: 'Revisit past challenges' },
