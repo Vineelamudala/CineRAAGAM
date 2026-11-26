@@ -28,10 +28,120 @@
 .clip-progress::before, .clip-progress::after { display: none; }
 ol.clip-progress { padding: 12px 14px; margin-top: 18px; }
 
-/* Listening stage: smaller artwork, one ring */
-.audio-art { height: 170px; }
-.audio-art::after { display: none; }
-.audio-note { padding-bottom: 12px; }
+/* ---- Clue player (Apple Music style): title, music-reactive bars, scrubber, play ----
+   --beat / --level are set on .clue-player every frame by lib/audio/visualizer.ts */
+.audio-panel.clue-player {
+  position: relative;
+  isolation: isolate;
+  margin-top: 16px;
+  padding: 18px 18px 6px;
+  border-radius: 18px;
+  border: 1px solid #ffffff14;
+  background: linear-gradient(160deg, #1c1316 0%, #0d0f16 55%, #0a0a0c 100%);
+  overflow: hidden;
+}
+.cp-glow {
+  position: absolute;
+  inset: -30% -10% auto;
+  height: 120%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(45% 55% at 20% 30%, #7a2433 0%, transparent 70%),
+    radial-gradient(45% 55% at 85% 60%, #22355e 0%, transparent 70%);
+  opacity: 0.35;
+  filter: blur(18px);
+  transition: opacity 0.4s;
+}
+.clue-player.is-playing .cp-glow { opacity: 0.55; }
+.clue-player.is-live .cp-glow {
+  opacity: calc(0.4 + var(--level, 0) * 1.1);
+  scale: calc(1 + var(--beat, 0) * 0.08);
+  transition: opacity 80ms linear, scale 60ms linear;
+}
+
+.cp-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.cp-title { font: 700 17px/1.25 var(--font-dm-sans), system-ui, sans-serif; color: #fff; letter-spacing: -0.01em; }
+.cp-status { margin-top: 3px; font-size: 13px; color: #ffffff99; }
+.cp-icon-button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: #ffffff1a;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+.cp-icon-button:hover:not(:disabled) { background: #ffffff2e; }
+.cp-icon-button:disabled { opacity: 0.4; cursor: default; }
+
+/* The bars: full width, the hero of the player */
+.clue-player .waveform {
+  position: relative;
+  inset: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3px;
+  height: 72px;
+  margin: 22px 2px 18px;
+  opacity: 1;
+}
+.clue-player .waveform i {
+  flex: 1 1 0;
+  min-width: 2px;
+  max-width: 5px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #ffffff, #c9ccd6);
+  box-shadow: none;
+  opacity: 0.55;
+}
+.clue-player.is-playing .waveform i { opacity: 0.85; }
+.clue-player.is-live .waveform i { height: 100% !important; opacity: 1; transition: transform 60ms linear; }
+
+/* Scrubber with a knob, elapsed and remaining time */
+.cp-scrub { display: grid; gap: 6px; }
+.cp-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 18px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.cp-range:disabled { cursor: default; opacity: 0.6; }
+.cp-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #f2f3f5 var(--progress, 0%), #ffffff33 var(--progress, 0%));
+}
+.cp-range::-moz-range-track { height: 4px; border-radius: 4px; background: #ffffff33; }
+.cp-range::-moz-range-progress { height: 4px; border-radius: 4px; background: #f2f3f5; }
+.cp-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 6px #0009;
+}
+.cp-range::-moz-range-thumb { width: 14px; height: 14px; border: 0; border-radius: 50%; background: #fff; box-shadow: 0 1px 6px #0009; }
+.cp-range:focus-visible { outline: 2px solid #fff; outline-offset: 3px; border-radius: 6px; }
+.cp-times { display: flex; justify-content: space-between; font: 12px var(--font-dm-mono), monospace; color: #ffffff8c; }
+
+.cp-controls { display: flex; justify-content: center; margin: 10px 0 12px; }
+.clue-player .cp-play { width: 60px; height: 60px; flex: none; }
+.clue-player .cp-play .pause-bars i { width: 4px; height: 18px; }
+.clue-player .audio-note { padding: 0 0 12px; font-size: 11px; color: #ffffff73; }
 
 /* ---- Result of the last guess: clear banner ---- */
 .guess-feedback {
@@ -90,17 +200,62 @@ ol.clip-progress { padding: 12px 14px; margin-top: 18px; }
 
 .guess-history { margin-bottom: 14px; }
 
-/* ---- Live visualiser: the bars and the artwork follow the music ----
-   (--beat and --level are set every frame by lib/audio/visualizer.ts) */
-.audio-panel.is-live .waveform { height: 46px; }
-.audio-panel.is-live .waveform i { height: 100% !important; opacity: 0.95 !important; transition: transform 60ms linear; }
-.audio-panel.is-live .vinyl {
-  scale: calc(1 + var(--beat, 0) * 0.1);
-  box-shadow: 0 0 0 7px hsl(var(--accent-h) var(--a-sat-dim) 40% / 0.15), 0 0 calc(30px + var(--beat, 0) * 70px) var(--foil-glow);
-  transition: scale 60ms linear;
+.guess-history li.is-correct { border-color: #24452f; color: #9ed9b0; background: #0f1a13; }
+
+/* ---- Reveal: clean result screen ---- */
+.reveal-panel.reveal-clean { min-height: 0; padding: 30px 8px 18px; }
+.reveal-clean .reveal-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font: 700 11px var(--font-dm-sans), system-ui, sans-serif;
+  letter-spacing: 0.08em;
 }
-.audio-panel.is-live .audio-art::before { scale: calc(1 + var(--beat, 0) * 0.06); }
-.audio-panel.is-live .art-glow { opacity: calc(0.12 + var(--level, 0) * 0.9); transition: opacity 80ms linear; }
+.reveal-clean.is-won .reveal-eyebrow { background: #12291a; color: #9ed9b0; border: 1px solid #24452f; }
+.reveal-clean.is-missed .reveal-eyebrow { background: #ffffff10; color: #d7d9de; border: 1px solid #ffffff1f; }
+.reveal-clean h2 {
+  margin: 16px 0 6px;
+  font: 800 clamp(30px, 6vw, 40px)/1.1 var(--font-dm-sans), system-ui, sans-serif;
+  letter-spacing: -0.03em;
+  color: #fff;
+}
+.reveal-meta { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 10px; margin: 0 0 22px; font-size: 13px; color: #ffffff99; }
+.reveal-year { padding: 2px 8px; border-radius: 6px; background: #ffffff14; color: #e6e7ea; font: 600 12px var(--font-dm-mono), monospace; }
+.reveal-clean .reveal-cast { margin: 0; font-size: 13px; color: #ffffffa6; }
+
+/* Three clean stat tiles instead of the "admit one" ticket */
+.reveal-clean .result-score {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 10px;
+  width: min(420px, 100%);
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+  background: none;
+  -webkit-mask: none;
+  mask: none;
+}
+.reveal-clean .result-score::before { content: none; }
+.reveal-clean .result-score > div {
+  display: grid;
+  gap: 4px;
+  padding: 14px 8px 12px;
+  border-radius: 14px;
+  background: #ffffff0d;
+  border: 1px solid #ffffff14;
+}
+.reveal-clean .result-score > div.is-points { background: #ffffff1c; border-color: #ffffff29; }
+.reveal-clean .result-score strong { font: 700 22px/1.1 var(--font-dm-sans), system-ui, sans-serif; color: #fff; letter-spacing: -0.01em; }
+.reveal-clean .result-score span { font: 600 10px var(--font-dm-sans), system-ui, sans-serif; letter-spacing: 0.08em; color: #ffffff80; }
+
+.reveal-guesses { justify-content: center; margin: 0 0 22px; }
+.reveal-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.reveal-clean .share-button, .reveal-clean .stats-button { height: 46px; padding: 0 22px; border-radius: 999px; font: 700 12px var(--font-dm-sans), system-ui, sans-serif; letter-spacing: 0.06em; }
+.reveal-social { display: flex; justify-content: center; gap: 12px; margin-top: 16px; }
 
 /* Visualiser diagnostics, only filled in with ?debug=viz */
 .viz-debug:empty { display: none; }
@@ -127,17 +282,16 @@ ol.clip-progress { padding: 12px 14px; margin-top: 18px; }
 
   .game-card-head h2 { font-size: 21px; }
   ol.clip-progress { padding: 10px; margin-top: 14px; }
-  .audio-art { height: 140px; }
-  .vinyl { width: 72px; height: 72px; }
-  .waveform { bottom: 12%; height: 26px; }
-  .audio-panel.is-live .waveform { height: 38px; }
+  .audio-panel.clue-player { padding: 16px 14px 4px; }
+  .clue-player .waveform { height: 60px; margin: 18px 0 14px; gap: 2px; }
+  .reveal-clean .result-score { gap: 8px; }
+  .reveal-clean .result-score strong { font-size: 19px; }
 
   .right-rail .week-card { grid-column: 1 / -1; min-height: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .guess-feedback, .guess-feedback.is-wrong { animation: none; }
-  /* The bars still follow the music (only while playing); the extra pulse and glow stay off. */
-  .audio-panel.is-live .vinyl, .audio-panel.is-live .audio-art::before { scale: none; }
-  .audio-panel.is-live .art-glow { opacity: 0.2; }
+  /* The bars still follow the music (only while playing); the glow stays still. */
+  .clue-player.is-live .cp-glow { scale: none; opacity: 0.5; }
 }

@@ -72,8 +72,8 @@ test('on phones with "reduce motion" (e.g. battery saver) the bars still follow 
   await page.waitForTimeout(700);
   const heights = await page.locator('.waveform i').evaluateAll(els => new Set(els.map(e => (e as HTMLElement).style.transform)).size);
   expect(heights).toBeGreaterThan(3);
-  // …but the reel does not pulse.
-  expect(await page.locator('.vinyl').evaluate(e => getComputedStyle(e).scale)).toBe('none');
+  // …but the background glow does not pulse.
+  expect(await page.locator('.cp-glow').evaluate(e => getComputedStyle(e).scale)).toBe('none');
 });
 
 test('the bars follow the clip even where live audio analysis is unavailable (many phones)', async ({ page }) => {
