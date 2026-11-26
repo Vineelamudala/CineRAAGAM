@@ -78,7 +78,8 @@ a.nav-item, .bottom-strip > a { text-decoration: none; }
 .placeholder-page .submit-button { display: inline-flex; align-items: center; text-decoration: none; }
 
 /* Skip link: hidden until focused with the keyboard. */
-.skip-link { position: fixed; left: 12px; top: -60px; z-index: 50; padding: 10px 16px; border-radius: 10px; background: var(--color-text); color: var(--color-bg); font-weight: 700; font-size: 13px; text-decoration: none; transition: top .15s; }
+/* Centred so that, while focused, it never covers the menu button in the top-left corner. */
+.skip-link { position: fixed; left: 50%; transform: translateX(-50%); white-space: nowrap; top: -60px; z-index: 50; padding: 10px 16px; border-radius: 10px; background: var(--color-text); color: var(--color-bg); font-weight: 700; font-size: 13px; text-decoration: none; transition: top .15s; }
 .skip-link:focus { top: 12px; }
 
 /* PWA install button in the sidebar. */

@@ -27,7 +27,7 @@ const formatDate = (iso: string) =>
 /** The game card. `date` (YYYY-MM-DD) plays a past day (Time Travel); omitted = today. */
 export function DailyGame({ date }: { date?: string }) {
   const player = usePlayer();
-  const { refresh: refreshStats } = useStats();
+  const { refresh: refreshStats, openStats } = useStats();
   const [load, setLoad] = useState<Load>({ kind: 'loading' });
   const [catalog, setCatalog] = useState<MovieOption[] | null>(null);
   const [busy, setBusy] = useState(false);
@@ -62,7 +62,14 @@ export function DailyGame({ date }: { date?: string }) {
       setLoad({ kind: 'ready', state: next });
       setListenClue(null);
       const p = next.play!;
-      if (p.status !== 'playing') refreshStats(); // streak, week strip and rank change
+      if (p.status !== 'playing') {
+        refreshStats(); // streak, week strip and rank change
+        // Show the statistics popup after an official daily game, once the reveal has been seen.
+        if (p.mode === 'daily') {
+          const highlight = p.status === 'won' ? (String(p.solved_on_clue) as '1' | '2' | '3') : 'missed';
+          window.setTimeout(() => openStats(highlight), 1500);
+        }
+      }
       if (p.status === 'won') setMessage('That’s correct! You recognised the movie.');
       else if (p.status === 'lost') setMessage('');
       else {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildShareText } from './share';
+import { buildShareText, shareLinks } from './share';
 
 describe('buildShareText', () => {
   it('shows per-clue results and points for a win', () => {
@@ -21,6 +21,20 @@ describe('buildShareText', () => {
   it('adds the streak when it is longer than one day', () => {
     expect(buildShareText({ challengeNumber: 9, results: ['correct'], points: 3, streak: 4 })).toContain('🔥 4-day streak');
     expect(buildShareText({ challengeNumber: 9, results: ['correct'], points: 3, streak: 1 })).not.toContain('streak');
+  });
+
+  it('never mentions points or streaks for Time Travel games', () => {
+    const text = buildShareText({ challengeNumber: 5, results: ['wrong', 'correct'], points: 0, streak: 9, timeTravel: true });
+    expect(text).toContain('Solved on clue 2/3 · Time Travel');
+    expect(text).not.toMatch(/point|streak/);
+    expect(buildShareText({ challengeNumber: 5, results: ['wrong', 'skipped', 'wrong'], points: 0, timeTravel: true })).toContain('Not solved · Time Travel');
+  });
+
+  it('builds X, WhatsApp and Facebook share links', () => {
+    const links = shareLinks('🎵 Cineraagam #4\n🟩⬜⬜', 'https://cineraagam.vercel.app');
+    expect(links.x).toBe('https://twitter.com/intent/tweet?text=%F0%9F%8E%B5%20Cineraagam%20%234%0A%F0%9F%9F%A9%E2%AC%9C%E2%AC%9C');
+    expect(decodeURIComponent(links.whatsapp.split('text=')[1])).toBe('🎵 Cineraagam #4\n🟩⬜⬜');
+    expect(links.facebook).toBe('https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fcineraagam.vercel.app');
   });
 
   it('never contains the movie title', () => {

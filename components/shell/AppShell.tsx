@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useMediaQuery } from '@/lib/hooks/useMediaQuery';
 import { usePlayer } from '@/lib/player/PlayerProvider';
 import { useStats } from '@/lib/player/StatsProvider';
+import { StatsDialog } from '@/components/StatsDialog';
 import { NameModal } from './NameModal';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
@@ -15,7 +16,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isMobile = useMediaQuery('(max-width: 620px)');
   const player = usePlayer();
-  const { stats } = useStats();
+  const { stats, openStats } = useStats();
   const [menuOpen, setMenuOpen] = useState(false);
   // "Maybe later" lasts for the browser session (the dialog only renders on the
   // client after the session loads, so this doesn't affect server rendering).
@@ -66,7 +67,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       <div className="main-area" inert={isMobile && menuOpen}>
-        <Topbar pathname={pathname} streak={stats?.current_streak ?? null} onOpenMenu={() => setMenuOpen(true)} onOpenProfile={() => setEditingName(true)} menuRef={openMenuRef} />
+        <Topbar pathname={pathname} streak={stats?.current_streak ?? null} onOpenStats={() => openStats()} onOpenMenu={() => setMenuOpen(true)} onOpenProfile={() => setEditingName(true)} menuRef={openMenuRef} />
         {player.status === 'error' && (
           <div role="alert" className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-[#4a2a33] bg-[#1a0f13] px-4 py-3 text-[12px] text-[#f2c4cb]">
             <span>We couldn’t connect to the Cineraagam server. Your progress won’t be saved until we reconnect.</span>
@@ -79,6 +80,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <span>MADE FOR THE LOVE OF TELUGU CINEMA <span className="footer-heart" aria-hidden="true">♥</span></span>
         </footer>
       </div>
+
+      <StatsDialog />
 
       {nameModalOpen && (
         <NameModal

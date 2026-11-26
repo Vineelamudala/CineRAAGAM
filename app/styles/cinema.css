@@ -214,6 +214,22 @@ ol.clip-progress {
 .rank-medal { background: var(--foil); color: var(--tone-ink); font-weight: 700; box-shadow: 0 0 14px var(--foil-glow); }
 .dist-bar { display: block; min-width: 0; background: var(--tone-300); }
 
+/* ---- Share buttons & statistics popup ---- */
+.stats-button { display: flex; align-items: center; gap: 9px; border: 1px solid var(--foil-line); background: transparent; color: var(--tone-100); border-radius: 8px; padding: 11px 16px; font: 600 11px var(--font-dm-mono), monospace; letter-spacing: 1px; cursor: pointer; }
+.stats-button:hover { border-color: var(--tone-300); }
+.social-button { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; border: 0; color: #fff; cursor: pointer; transition: transform .15s, filter .15s; }
+.social-button:hover { transform: translateY(-2px); filter: brightness(1.1); }
+.social-x { background: #000; box-shadow: inset 0 0 0 1px #3a3a3a; }
+.social-whatsapp { background: #25d366; color: #fff; }
+.social-facebook { background: #1877f2; }
+.stat-tile { color: #111; }
+.stat-gold { background: #f5c542; }
+.stat-green { background: #22c55e; }
+.stat-blue { background: #60a5fa; }
+.stat-silver { background: var(--foil); color: var(--tone-ink); }
+.dist-bar-today { background: #22c55e; }
+.dist-bar-today-miss { background: #ef6b6b; }
+
 /* ---- Misc touches ---- */
 .footer-heart { color: var(--tone-300); }
 .quote-card { background: radial-gradient(ellipse at 100% 0%, hsl(var(--accent-h) var(--a-sat-dim) 16%) 0%, hsl(var(--accent-h) var(--a-sat-dim) 8%) 45%, var(--panel-deep) 85%); }
