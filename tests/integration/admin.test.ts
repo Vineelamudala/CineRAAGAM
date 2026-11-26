@@ -37,8 +37,8 @@ describe('admin accounts (scripts/admin.mjs)', () => {
     const admin = await signIn(email, password);
     const { data: movie, error } = await admin.from('movies').insert({ title: `IT Movie ${tag}` }).select('id').single();
     expect(error).toBeNull();
-    const path = `${randomUUID()}.webm`;
-    const up = await admin.storage.from('clips').upload(path, readFileSync('e2e/fixtures/clue-1.webm'), { contentType: 'audio/webm' });
+    const path = `${randomUUID()}.mp3`;
+    const up = await admin.storage.from('clips').upload(path, readFileSync('e2e/fixtures/clue-1.mp3'), { contentType: 'audio/mpeg' });
     expect(up.error).toBeNull();
     const { error: clipError } = await admin.from('clips').insert({ movie_id: movie!.id, storage_path: path, kind: 'bgm', duration_ms: 6000 });
     expect(clipError).toBeNull();

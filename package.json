@@ -28,6 +28,7 @@
     "audio:fixtures": "node scripts/generate-test-audio.mjs"
   },
   "dependencies": {
+    "@breezystack/lamejs": "1.2.7",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.119.2",
     "lucide-react": "^1.79.0",

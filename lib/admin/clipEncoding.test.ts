@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canCutClip, clampSelection, formatSeconds, pickRecordingFormat, waveformPeaks } from './clipEncoding';
+import { canCutClip, clampSelection, formatSeconds, waveformPeaks } from './clipEncoding';
 
 describe('clampSelection', () => {
   it('keeps clips between 5 and 20 seconds', () => {
@@ -20,15 +20,6 @@ describe('clampSelection', () => {
   it('rejects files shorter than 5 seconds', () => {
     expect(canCutClip(4.9)).toBe(false);
     expect(canCutClip(5)).toBe(true);
-  });
-});
-
-describe('pickRecordingFormat', () => {
-  it('prefers WebM/Opus, then Ogg, then MP4', () => {
-    expect(pickRecordingFormat(() => true)?.ext).toBe('webm');
-    expect(pickRecordingFormat(m => m.startsWith('audio/ogg'))?.ext).toBe('ogg');
-    expect(pickRecordingFormat(m => m === 'audio/mp4')).toEqual({ mime: 'audio/mp4', ext: 'm4a', contentType: 'audio/mp4' });
-    expect(pickRecordingFormat(() => false)).toBeNull();
   });
 });
 

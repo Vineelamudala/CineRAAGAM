@@ -4,14 +4,15 @@ import { useEffect, useRef, useState } from 'react';
 import { Loader2, Play, Square, Upload } from 'lucide-react';
 import { Button, Field, Input, Notice, Select, friendlyError } from './ui';
 import { useAdminDb } from '@/lib/admin/AdminProvider';
-import { ACCEPT_FILES, CLIP_MAX_SEC, CLIP_MIN_SEC, FADE_SEC, canCutClip, clampSelection, formatSeconds, pickRecordingFormat, waveformPeaks } from '@/lib/admin/clipEncoding';
+import { ACCEPT_FILES, CLIP_MAX_SEC, CLIP_MIN_SEC, FADE_SEC, canCutClip, clampSelection, formatSeconds, waveformPeaks } from '@/lib/admin/clipEncoding';
+import { encodeMp3, MP3_SAMPLE_RATE } from '@/lib/admin/mp3';
 
 type Phase = 'idle' | 'decoding' | 'ready' | 'encoding' | 'uploading' | 'error';
 
 /**
  * Upload a clip for a movie: pick any audio file, choose a 5–20 s section,
- * preview it, then the browser re-records just that section into a brand-new
- * WebM/Opus file (with a short fade). Re-encoding drops all original tags
+ * preview it, then the browser renders just that section into a brand-new
+ * MP3 file (with a short fade). Re-encoding drops all original tags
  * (title, album, artist…) so the file can never reveal the movie, and it is
  * stored under a random UUID name.
  */
@@ -104,46 +105,41 @@ export function ClipUploader({ movieId, onUploaded }: { movieId: string; onUploa
 
   async function encodeAndUpload() {
     if (!buffer) return;
-    const format = typeof MediaRecorder !== 'undefined' ? pickRecordingFormat(m => MediaRecorder.isTypeSupported(m)) : null;
-    if (!format) { setError('This browser cannot record audio. Please use a recent Chrome, Edge or Firefox.'); return; }
+    if (typeof OfflineAudioContext === 'undefined') { setError('This browser cannot process audio. Please use a recent Chrome, Edge, Firefox or Safari.'); return; }
     stopPreview();
     setError(null);
     setPhase('encoding');
     setProgress(0);
 
-    // Re-record the selection in real time into a new file (not audible).
-    const ctx = new AudioContext();
-    if (ctx.state === 'suspended') await ctx.resume(); // iPhone Safari starts audio paused
-    const dest = ctx.createMediaStreamDestination();
-    const src = ctx.createBufferSource();
-    src.buffer = buffer;
-    const gain = ctx.createGain();
-    src.connect(gain).connect(dest);
-    // 64 kbps Opus: clean for short music clips and half the size of 128 kbps,
-    // which doubles how many players the free hosting bandwidth can serve.
-    const recorder = new MediaRecorder(dest.stream, { mimeType: format.mime, audioBitsPerSecond: 64_000 });
-    const chunks: Blob[] = [];
-    recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
-    const stopped = new Promise<void>(resolve => { recorder.onstop = () => resolve(); });
-
-    const t0 = ctx.currentTime + 0.1;
-    gain.gain.setValueAtTime(0, t0);
-    gain.gain.linearRampToValueAtTime(1, t0 + FADE_SEC);
-    gain.gain.setValueAtTime(1, t0 + length - FADE_SEC);
-    gain.gain.linearRampToValueAtTime(0, t0 + length);
-    recorder.start();
-    src.start(t0, start, length);
-    const timer = setInterval(() => setProgress(Math.min(1, (ctx.currentTime - t0) / length)), 200);
-    await new Promise(r => setTimeout(r, (length + 0.35) * 1000));
-    clearInterval(timer);
-    recorder.stop();
-    await stopped;
-    await ctx.close();
-    const blob = new Blob(chunks, { type: format.contentType });
+    let blob: Blob;
+    try {
+      // Render just the selection (with short fades) faster than real time, as
+      // 44.1 kHz stereo, then encode a brand-new MP3: no original tags survive,
+      // and MP3 plays on every phone with an exact length.
+      const offline = new OfflineAudioContext(2, Math.ceil(length * MP3_SAMPLE_RATE), MP3_SAMPLE_RATE);
+      const src = offline.createBufferSource();
+      src.buffer = buffer;
+      const gain = offline.createGain();
+      src.connect(gain).connect(offline.destination);
+      gain.gain.setValueAtTime(0, 0);
+      gain.gain.linearRampToValueAtTime(1, FADE_SEC);
+      gain.gain.setValueAtTime(1, length - FADE_SEC);
+      gain.gain.linearRampToValueAtTime(0, length);
+      src.start(0, start, length);
+      const rendered = await offline.startRendering();
+      setProgress(0.6);
+      const bytes = encodeMp3([rendered.getChannelData(0), rendered.getChannelData(1)]);
+      blob = new Blob([bytes as BlobPart], { type: 'audio/mpeg' });
+      setProgress(1);
+    } catch {
+      setPhase('ready');
+      setError('Could not convert this clip. Try another file or browser.');
+      return;
+    }
 
     setPhase('uploading');
-    const storagePath = `${crypto.randomUUID()}.${format.ext}`;
-    const up = await db.storage.from('clips').upload(storagePath, blob, { contentType: format.contentType, upsert: false });
+    const storagePath = `${crypto.randomUUID()}.mp3`;
+    const up = await db.storage.from('clips').upload(storagePath, blob, { contentType: 'audio/mpeg', upsert: false });
     if (up.error) { setPhase('ready'); setError(`Upload failed: ${up.error.message}`); return; }
     const { error: rowError } = await db.from('clips').insert({
       movie_id: movieId,
@@ -206,7 +202,6 @@ export function ClipUploader({ movieId, onUploaded }: { movieId: string; onUploa
                 : phase === 'uploading' ? <><Loader2 size={13} className="animate-spin" /> Uploading…</>
                 : <><Upload size={13} /> Save clip</>}
             </Button>
-            {phase === 'encoding' && <span className="text-[11px] text-muted">Recording takes as long as the clip ({length.toFixed(0)} s).</span>}
           </div>
         </>
       )}

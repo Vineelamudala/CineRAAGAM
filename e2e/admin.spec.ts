@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { totp } from '../tests/helpers/totp';
+import { adminClient } from '../scripts/dev-seed.mjs';
 import { E2E_ADMIN, E2E_MFA_ADMIN } from './global-setup';
 
 // The admin dashboard is a desktop tool; run these once (desktop project).
@@ -70,6 +71,12 @@ test('admin adds a movie, cast and clips, schedules it, then cleans up', async (
   }
   await page.getByRole('button', { name: 'Play clip 1' }).click(); // admin preview works
   await expect(page.getByRole('button', { name: 'Pause' })).toBeVisible();
+
+  // Whatever the source format, clips are stored as MP3 (plays on every phone).
+  const movieId = new URL(page.url()).pathname.split('/').pop()!;
+  const { data: stored } = await adminClient().from('clips').select('storage_path').eq('movie_id', movieId);
+  expect(stored).toHaveLength(3);
+  for (const c of stored!) expect(c.storage_path).toMatch(/\.mp3$/);
 
   // Schedule it
   await page.goto(`/admin/challenges/new?date=${date}`);

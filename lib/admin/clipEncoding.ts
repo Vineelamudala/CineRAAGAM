@@ -23,16 +23,6 @@ export const ACCEPT_FILES = 'audio/*,video/*,.mp3,.m4a,.aac,.wav,.ogg,.oga,.opus
 /** True when the file is long enough to cut a valid clip from. */
 export const canCutClip = (totalSec: number) => totalSec >= CLIP_MIN_SEC;
 
-/** Best recording format the browser supports, with its storage extension. */
-export function pickRecordingFormat(isSupported: (mime: string) => boolean): { mime: string; ext: 'webm' | 'ogg' | 'm4a'; contentType: string } | null {
-  const options = [
-    { mime: 'audio/webm;codecs=opus', ext: 'webm', contentType: 'audio/webm' },
-    { mime: 'audio/ogg;codecs=opus', ext: 'ogg', contentType: 'audio/ogg' },
-    { mime: 'audio/mp4', ext: 'm4a', contentType: 'audio/mp4' },
-  ] as const;
-  return options.find(o => isSupported(o.mime)) ?? null;
-}
-
 /** Peak amplitude per bucket, for drawing a waveform (values 0..1). */
 export function waveformPeaks(samples: Float32Array, buckets: number): number[] {
   const size = Math.max(1, Math.floor(samples.length / buckets));

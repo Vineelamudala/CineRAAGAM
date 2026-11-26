@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Headphones, Loader2, Play, RotateCcw } from 'lucide-react';
-import { loadSpectrum } from '@/lib/audio/spectrum';
+import { loadClip } from '@/lib/audio/spectrum';
 import { startVisualizer } from '@/lib/audio/visualizer';
 
 // Resting shape of the bars (a soft wave); while a clip plays they follow the music.
@@ -24,8 +24,8 @@ type Props = {
 };
 
 /**
- * Listening stage with a real <audio> element. Replaying never uses up a guess.
- * Handles slow connections (buffering) and failures (retry with a fresh URL).
+ * Listening stage with a real <audio> element playing the downloaded clip from
+ * memory. Replaying never uses up a guess. Handles failures (retry with a fresh URL).
  */
 export function AudioPanel({ clue, path, durationMs, kind }: Props) {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -51,9 +51,24 @@ export function AudioPanel({ clue, path, durationMs, kind }: Props) {
   const durationSec = durationMs / 1000;
   const playing = status === 'playing' || status === 'buffering';
 
-  // Analyse the clip as soon as it is available, so the bars are ready when Play is pressed.
-  // (Same URL as the <audio> element, so it comes from the browser cache.)
-  useEffect(() => { loadSpectrum(src); }, [src]);
+  // Download the whole clip, then play it from memory (works on every phone; see loadClip).
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    let url: string | null = null;
+    loadClip(src).then(
+      clip => {
+        if (cancelled) return;
+        url = URL.createObjectURL(clip.blob);
+        setBlobUrl(url);
+      },
+      () => { if (!cancelled) setStatus('error'); },
+    );
+    return () => {
+      cancelled = true;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [src]);
 
   async function play(fromStart: boolean) {
     const audio = audioRef.current;
@@ -61,7 +76,7 @@ export function AudioPanel({ clue, path, durationMs, kind }: Props) {
     if (fromStart) audio.currentTime = 0;
     if (!stopVizRef.current && waveRef.current) {
       stopVizRef.current = startVisualizer(audio, Array.from(waveRef.current.querySelectorAll('i')), {
-        spectrum: loadSpectrum(src),
+        spectrum: loadClip(src).then(clip => clip.spectrum, () => null),
         stage: artRef.current ?? undefined,
         debugEl: debugRef.current ?? undefined,
         onLive: setLive,
@@ -126,11 +141,11 @@ export function AudioPanel({ clue, path, durationMs, kind }: Props) {
         {BARS.map((b, i) => <i key={i} style={{ height: `${b.height}%`, animationDelay: `${b.delay}s` }} />)}
       </div>
 
-      {src && (
+      {blobUrl && (
         <audio
+          key={blobUrl}
           ref={audioRef}
-          src={src}
-          crossOrigin="anonymous"
+          src={blobUrl}
           preload="auto"
           onCanPlay={() => setStatus(s => (s === 'loading' ? 'ready' : s))}
           onPlaying={() => setStatus('playing')}

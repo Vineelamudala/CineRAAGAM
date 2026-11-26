@@ -85,32 +85,44 @@ export function frameAt(spectrum: Spectrum, time: number): Uint8Array {
   return spectrum.frames[i];
 }
 
-const cache = new Map<string, Promise<Spectrum | null>>();
+async function analyse(bytes: ArrayBuffer): Promise<Spectrum | null> {
+  try {
+    if (typeof OfflineAudioContext === 'undefined') return null;
+    const decoded = await new OfflineAudioContext(1, 1, 44100).decodeAudioData(bytes);
+    const mono = new Float32Array(decoded.length);
+    for (let c = 0; c < decoded.numberOfChannels; c++) {
+      const channel = decoded.getChannelData(c);
+      for (let i = 0; i < mono.length; i++) mono[i] += channel[i] / decoded.numberOfChannels;
+    }
+    return computeSpectrum(mono, decoded.sampleRate);
+  } catch {
+    return null; // can't decode here: the bars fall back to a simple pulse
+  }
+}
+
+/** A downloaded clip: the file itself (played from memory) and its spectrum. */
+export type LoadedClip = { blob: Blob; spectrum: Promise<Spectrum | null> };
+
+const clips = new Map<string, Promise<LoadedClip>>();
 
 /**
- * Fetches (from the browser cache: the <audio> element already downloaded it)
- * and analyses a clip once per page. Resolves null if the browser can't decode it.
+ * Downloads a clip completely, once per page. Playing it from memory (a blob:
+ * URL) instead of streaming it avoids two phone problems: iPhones need the
+ * server to answer partial "range" requests for streamed audio (or they fail /
+ * stop early), and seeking works everywhere. Rejects when the clip can't be
+ * downloaded (e.g. locked or offline); a later call retries.
  */
-export function loadSpectrum(url: string): Promise<Spectrum | null> {
-  let pending = cache.get(url);
+export function loadClip(url: string): Promise<LoadedClip> {
+  let pending = clips.get(url);
   if (!pending) {
     pending = (async () => {
-      try {
-        if (typeof OfflineAudioContext === 'undefined') return null;
-        const res = await fetch(url);
-        if (!res.ok) return null;
-        const decoded = await new OfflineAudioContext(1, 1, 44100).decodeAudioData(await res.arrayBuffer());
-        const mono = new Float32Array(decoded.length);
-        for (let c = 0; c < decoded.numberOfChannels; c++) {
-          const channel = decoded.getChannelData(c);
-          for (let i = 0; i < mono.length; i++) mono[i] += channel[i] / decoded.numberOfChannels;
-        }
-        return computeSpectrum(mono, decoded.sampleRate);
-      } catch {
-        return null;
-      }
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`clip HTTP ${res.status}`);
+      const blob = await res.blob();
+      return { blob, spectrum: blob.arrayBuffer().then(analyse) };
     })();
-    cache.set(url, pending);
+    pending.catch(() => clips.delete(url));
+    clips.set(url, pending);
   }
   return pending;
 }

@@ -42,9 +42,10 @@ async function ensureMovie(db, title, cast) {
 }
 
 async function uploadClip(db, movieId, n) {
-  const storage_path = `${randomUUID()}.webm`;
-  const bytes = readFileSync(`e2e/fixtures/clue-${n}.webm`);
-  const up = await db.storage.from('clips').upload(storage_path, bytes, { contentType: 'audio/webm' });
+  // MP3, like the clips the admin uploader produces.
+  const storage_path = `${randomUUID()}.mp3`;
+  const bytes = readFileSync(`e2e/fixtures/clue-${n}.mp3`);
+  const up = await db.storage.from('clips').upload(storage_path, bytes, { contentType: 'audio/mpeg' });
   if (up.error) throw up.error;
   const { data, error } = await db.from('clips')
     .insert({ movie_id: movieId, storage_path, kind: n === 2 ? 'song_interlude' : 'bgm', duration_ms: 6000 })
