@@ -133,4 +133,7 @@ ol.clip-progress { padding: 12px 14px; margin-top: 18px; }
 
 @media (prefers-reduced-motion: reduce) {
   .guess-feedback, .guess-feedback.is-wrong { animation: none; }
+  /* The bars still follow the music (only while playing); the extra pulse and glow stay off. */
+  .audio-panel.is-live .vinyl, .audio-panel.is-live .audio-art::before { scale: none; }
+  .audio-panel.is-live .art-glow { opacity: 0.2; }
 }

@@ -57,9 +57,6 @@ export function createBeatDetector(): (bass: number) => number {
   };
 }
 
-export const prefersReducedMotion = () =>
-  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
 /**
  * Starts animating `bars` from `audio`. Call from a user gesture (play).
  * If `stage` is given, it receives two CSS variables every frame:
@@ -67,7 +64,10 @@ export const prefersReducedMotion = () =>
  * Returns a stop function. Returns null when unsupported (bars stay decorative).
  */
 export async function startVisualizer(audio: HTMLAudioElement, bars: HTMLElement[], stage?: HTMLElement): Promise<(() => void) | null> {
-  if (prefersReducedMotion() || typeof AudioContext === 'undefined' || bars.length === 0) return null;
+  // Runs even with "reduce motion" on: many Android phones turn that on in battery
+  // saver, and the bars only move while the player has pressed play. The extra
+  // effects (reel pulse, glow) are switched off for reduce motion in CSS instead.
+  if (typeof AudioContext === 'undefined' || bars.length === 0) return null;
   let analyser: AnalyserNode;
   try {
     analyser = analyserFor(audio);

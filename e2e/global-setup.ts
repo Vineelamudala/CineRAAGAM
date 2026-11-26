@@ -4,11 +4,30 @@
 import { createAdmin, resetTwoFactor } from '../scripts/admin.mjs';
 import { adminClient, istDate, seedDevChallenges } from '../scripts/dev-seed.mjs';
 
-export const E2E_ADMIN = { email: 'e2e-admin@example.com', password: 'E2e-Admin-Passw0rd-Local' };
+/**
+ * LOCAL STACK ONLY: delete anonymous players left by earlier test runs, so the
+ * leaderboards (top 50) never fill up with old test players. Never touches a
+ * hosted project: it refuses unless the Supabase URL is localhost.
+ */
+async function removeOldLocalTestPlayers(db: ReturnType<typeof adminClient>) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+  if (!/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?(\/|$)/.test(url)) return;
+  const cutoff = Date.now() - 10 * 60 * 1000; // keep anything from a run in progress
+  for (;;) {
+    const { data, error } = await db.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    if (error) throw error;
+    const old = data.users.filter(u => u.is_anonymous && new Date(u.created_at).getTime() < cutoff);
+    if (old.length === 0) return;
+    for (const u of old) await db.auth.admin.deleteUser(u.id);
+  }
+}
+
+export const E2E_ADMIN ={ email: 'e2e-admin@example.com', password: 'E2e-Admin-Passw0rd-Local' };
 export const E2E_MFA_ADMIN = { email: 'e2e-admin-mfa@example.com', password: 'E2e-Mfa-Passw0rd-Local' };
 
 export default async function globalSetup() {
   const db = adminClient();
+  await removeOldLocalTestPlayers(db);
   await seedDevChallenges(db);
   const { data, error } = await db
     .from('daily_challenges')

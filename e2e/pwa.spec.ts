@@ -62,6 +62,20 @@ test('the waveform visualiser follows the real audio', async ({ page, isMobile }
   await expect(page.locator('.audio-panel.is-live')).toHaveCount(0);
 });
 
+test('on phones with "reduce motion" (e.g. battery saver) the bars still follow the audio', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'phone setting');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await page.getByRole('dialog').getByRole('button', { name: 'Maybe later' }).click();
+  await page.getByRole('button', { name: 'Play clue', exact: true }).click();
+  await expect(page.locator('.audio-panel.is-live')).toBeVisible();
+  await page.waitForTimeout(700);
+  const heights = await page.locator('.waveform i').evaluateAll(els => new Set(els.map(e => (e as HTMLElement).style.transform)).size);
+  expect(heights).toBeGreaterThan(3);
+  // …but the reel does not pulse.
+  expect(await page.locator('.vinyl').evaluate(e => getComputedStyle(e).scale)).toBe('none');
+});
+
 test('the catalogue endpoint serves the public movie list with caching', async ({ request }) => {
   const res = await request.get('/api/catalog');
   expect(res.ok()).toBe(true);
