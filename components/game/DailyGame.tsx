@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Check, Clapperboard, RefreshCw, SkipForward, X } from 'lucide-react';
 import { AudioPanel } from './AudioPanel';
@@ -14,6 +14,8 @@ import { useStats } from '@/lib/player/StatsProvider';
 import type { MovieOption } from '@/lib/search/movies';
 import { getBrowserSupabase } from '@/lib/supabase/browser';
 import { istDateString } from '@/lib/time/ist';
+
+type Feedback = { tone: 'wrong' | 'skip' | 'error'; title: string; text: string };
 
 type Load =
   | { kind: 'loading' }
@@ -32,6 +34,9 @@ export function DailyGame({ date }: { date?: string }) {
   const [catalog, setCatalog] = useState<MovieOption[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  // The result of the last guess / skip, shown as a clear banner above the next clue.
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const feedbackRef = useRef<HTMLDivElement>(null);
   const [listenClue, setListenClue] = useState<ClueNumber | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const now = useNow();
@@ -53,10 +58,20 @@ export function DailyGame({ date }: { date?: string }) {
 
   const reload = useCallback(() => { setLoad({ kind: 'loading' }); setReloadKey(k => k + 1); }, []);
 
+  // Bring a new result into view (players on phones are usually down at the guess box)
+  // and give a short buzz for a wrong guess on phones that support it.
+  useEffect(() => {
+    if (!feedback) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    feedbackRef.current?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'nearest' });
+    if (feedback.tone === 'wrong') navigator.vibrate?.(120);
+  }, [feedback]);
+
   async function send(clue: ClueNumber, movie: MovieOption | null) {
     if (load.kind !== 'ready' || busy) return;
     setBusy(true);
     setMessage('');
+    setFeedback(null);
     try {
       const next = await submitGuess(getBrowserSupabase()!, load.state.date, clue, movie?.id ?? null);
       setLoad({ kind: 'ready', state: next });
@@ -70,17 +85,17 @@ export function DailyGame({ date }: { date?: string }) {
           window.setTimeout(() => openStats(highlight), 1500);
         }
       }
-      if (p.status === 'won') setMessage('That’s correct! You recognised the movie.');
-      else if (p.status === 'lost') setMessage('');
-      else {
+      if (p.status === 'playing') {
         const nextClue = clueInfo(p.current_clue);
-        const prefix = movie ? 'Not quite.' : 'Clue skipped.';
         const worth = p.mode === 'time_travel' ? nextClue.difficulty : `${nextClue.difficulty} · ${nextClue.points} ${nextClue.points === 1 ? 'point' : 'points'}`;
-        setMessage(`${prefix} Clue ${nextClue.number} (${worth}) is ready.`);
+        const text = `Clue ${nextClue.number} (${worth}) is unlocked. Listen and guess again.`;
+        setFeedback(movie
+          ? { tone: 'wrong', title: `Not quite: “${movie.title}” isn’t the movie.`, text }
+          : { tone: 'skip', title: `Clue ${clue} skipped.`, text });
       }
     } catch {
       // Safe to retry: the server ignores duplicate submissions for a clue.
-      setMessage('We couldn’t reach the server. Check your connection and try again.');
+      setFeedback({ tone: 'error', title: 'We couldn’t reach the server.', text: 'Check your connection and try again. Your guess was not used up.' });
     } finally {
       setBusy(false);
     }
@@ -121,7 +136,7 @@ export function DailyGame({ date }: { date?: string }) {
       {newDayAvailable && (
         <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-line bg-panel-2 px-4 py-3 text-[12px]">
           <span>A new show has started. Today’s challenge is ready.</span>
-          <button className="submit-button h-9!" onClick={() => { setListenClue(null); setMessage(''); reload(); }}>LOAD IT</button>
+          <button className="submit-button h-9!" onClick={() => { setListenClue(null); setMessage(''); setFeedback(null); reload(); }}>LOAD IT</button>
         </div>
       )}
       <div className="game-card-head">
@@ -182,6 +197,29 @@ export function DailyGame({ date }: { date?: string }) {
         })}
       </ol>
 
+      {/* Always-present live region so screen readers announce each new result. */}
+      <div ref={feedbackRef} role="status" aria-live="polite" className="guess-feedback-slot">
+        {feedback && !finished && (
+          <div key={`${state.guesses.length}-${feedback.tone}`} className={`guess-feedback is-${feedback.tone}`}>
+            <span className="guess-feedback-icon" aria-hidden="true">
+              {feedback.tone === 'wrong' ? <X size={16} /> : feedback.tone === 'skip' ? <SkipForward size={15} /> : <RefreshCw size={15} />}
+            </span>
+            <span className="guess-feedback-text"><strong>{feedback.title}</strong> {feedback.text}</span>
+          </div>
+        )}
+      </div>
+
+      {!finished && state.guesses.length > 0 && (
+        <ul className="guess-history" aria-label="Your guesses so far">
+          {state.guesses.map(g => (
+            <li key={g.clue} className={`is-${g.result}`}>
+              {g.result === 'skipped' ? <SkipForward size={12} aria-hidden="true" /> : <X size={12} aria-hidden="true" />}
+              <span>Clue {g.clue}: {g.result === 'skipped' ? 'skipped' : g.movie_title}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
       {audioClip?.path && (
         <AudioPanel key={audioClip.path} clue={audioClip.clue} path={audioClip.path} durationMs={audioClip.duration_ms} kind={audioClip.kind} />
       )}
@@ -206,11 +244,6 @@ export function DailyGame({ date }: { date?: string }) {
       ) : (
         <RevealPanel state={state} />
       )}
-
-      <div className="game-footnote">
-        <span><span className="lock-dot" aria-hidden="true" /> Your answer stays private until you share.</span>
-        <span>{state.is_today ? 'FINISH BEFORE MIDNIGHT IST' : 'POWERED BY YOUR LOVE FOR TELUGU CINEMA'}</span>
-      </div>
     </section>
   );
 }

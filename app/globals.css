@@ -6,6 +6,7 @@
 @import './styles/legacy.css';
 @import './styles/cinema.css';
 @import './styles/readability.css';
+@import './styles/clean.css';
 
 /* Accent colour for the whole app. Every accent shade (text, glows, borders,
    tinted near-black panels) is derived from these two values:
@@ -81,7 +82,7 @@ a.submit-button { display: inline-flex; align-items: center; justify-content: ce
 /* Skip link: hidden until focused with the keyboard. */
 /* Centred so that, while focused, it never covers the menu button in the top-left corner. */
 .skip-link { position: fixed; left: 50%; transform: translateX(-50%); white-space: nowrap; top: -60px; z-index: 50; padding: 10px 16px; border-radius: 10px; background: var(--color-text); color: var(--color-bg); font-weight: 700; font-size: 13px; text-decoration: none; transition: top .15s; }
-.skip-link:focus { top: 12px; }
+.skip-link:focus-visible { top: 12px; }
 
 
 /* Visually hidden but available to screen readers. */

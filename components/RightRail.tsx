@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { AudioLines, CalendarDays, ChartNoAxesCombined, Flame, Trophy } from 'lucide-react';
+import { CalendarDays, ChartNoAxesCombined, Flame, Trophy } from 'lucide-react';
 import { RailWeek } from '@/components/WeekStrip';
 import { useStats } from '@/lib/player/StatsProvider';
 
@@ -22,12 +22,6 @@ export function RightRail() {
         <div className="rail-title">THIS WEEK <CalendarDays size={15} aria-hidden="true" /></div>
         <RailWeek week={stats?.week} />
         <p>{stats ? `${stats.week_points} ${stats.week_points === 1 ? 'point' : 'points'} this week. One new soundtrack every day.` : 'One new soundtrack every day. Keep your streak alive.'}</p>
-      </div>
-      <div className="quote-card">
-        <div className="quote-mark" aria-hidden="true">“</div>
-        <p>Some tunes don&apos;t just play. They take you back.</p>
-        <span>THE CINERAAGAM FEELING</span>
-        <div className="quote-decoration" aria-hidden="true"><AudioLines size={65} /></div>
       </div>
     </aside>
   );

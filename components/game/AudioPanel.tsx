@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Headphones, Loader2, Music2, Play, RotateCcw, Volume2 } from 'lucide-react';
+import { AlertTriangle, Headphones, Loader2, Music2, Play, RotateCcw } from 'lucide-react';
 import { startVisualizer } from '@/lib/audio/visualizer';
 
 const BARS = Array.from({ length: 57 }, (_, i) => ({ height: 14 + ((i * 19 + 7) % 54), opacity: 0.35 + (i % 5) * 0.13, delay: (i % 7) * 0.11 }));
@@ -35,6 +35,7 @@ export function AudioPanel({ clue, path, durationMs, kind }: Props) {
   const src = `/api/clip/${path}${attempt ? `?retry=${attempt}` : ''}`;
   const [live, setLive] = useState(false);
   const waveRef = useRef<HTMLDivElement>(null);
+  const artRef = useRef<HTMLDivElement>(null); // receives --beat / --level from the visualiser
   const stopVizRef = useRef<(() => void) | null>(null);
 
   function stopViz() {
@@ -53,7 +54,7 @@ export function AudioPanel({ clue, path, durationMs, kind }: Props) {
     if (fromStart) audio.currentTime = 0;
     // Start the live visualiser from this user gesture (browsers require one for Web Audio).
     if (!stopVizRef.current && waveRef.current) {
-      stopVizRef.current = await startVisualizer(audio, Array.from(waveRef.current.querySelectorAll('i')));
+      stopVizRef.current = await startVisualizer(audio, Array.from(waveRef.current.querySelectorAll('i')), artRef.current ?? undefined);
       setLive(!!stopVizRef.current);
     }
     try {
@@ -87,17 +88,16 @@ export function AudioPanel({ clue, path, durationMs, kind }: Props) {
   return (
     <div className={`audio-panel ${playing ? 'is-playing' : ''} ${live ? 'is-live' : ''}`}>
       <div className="audio-panel-top">
-        <div className="audio-kicker"><span className="sound-pulse" aria-hidden="true" /> NOW PLAYING · CLUE 0{clue} · {kind === 'bgm' ? 'BGM' : 'SONG INTERLUDE'}</div>
+        <div className="audio-kicker"><span className="sound-pulse" aria-hidden="true" /> CLUE {clue} · {kind === 'bgm' ? 'BGM' : 'SONG INTERLUDE'}</div>
         <span className="clip-duration">{`${Math.floor(durationSec / 60)}:${String(Math.round(durationSec % 60)).padStart(2, '0')}`}</span>
       </div>
-      <div className="audio-art" aria-hidden="true">
+      <div className="audio-art" aria-hidden="true" ref={artRef}>
         <div className="art-glow glow-one" />
         <div className="art-glow glow-two" />
         <div className="vinyl"><div className="vinyl-inner"><Music2 size={25} /></div></div>
         <div className="waveform" ref={waveRef}>
           {BARS.map((b, i) => <i key={i} style={{ height: `${b.height}%`, opacity: b.opacity, animationDelay: `${b.delay}s` }} />)}
         </div>
-        <div className="art-caption">A SOUND FROM THE SILVER SCREEN</div>
       </div>
 
       {src && (
@@ -143,9 +143,8 @@ export function AudioPanel({ clue, path, durationMs, kind }: Props) {
             <RotateCcw size={15} aria-hidden="true" /><span>Replay</span>
           </button>
         )}
-        <Volume2 size={17} className="volume-icon" aria-hidden="true" />
       </div>
-      <div className="audio-note"><Headphones size={14} aria-hidden="true" /> Replay as often as you like — it never uses up a guess.</div>
+      <div className="audio-note"><Headphones size={14} aria-hidden="true" /> Replay as often as you like. It never uses up a guess.</div>
     </div>
   );
 }

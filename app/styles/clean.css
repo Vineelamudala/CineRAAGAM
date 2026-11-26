@@ -1,0 +1,136 @@
+/* ==========================================================
+   CLEAN PASS — calmer, simpler screens (player feedback: "looks clumsy")
+   Loaded last. Only presentation: no game behaviour depends on it.
+   - smaller hero, no spotlight / marquee lights / film-strip dashes
+   - smaller listening artwork, shorter labels, less letter-spacing
+   - a clear banner for a wrong guess or a skip, and a guess history
+   ========================================================== */
+
+/* ---- Calmer labels: tighter letter-spacing on the small uppercase text ---- */
+.eyebrow, .challenge-label, .audio-kicker, .guess-section > label, .rail-title,
+.bottom-strip-title, .countdown-label, .side-label, .streak-top, .clip-step .step-title {
+  letter-spacing: 0.12em;
+}
+
+/* ---- Hero: smaller, less space, no spotlight beam ---- */
+.welcome-row { min-height: 0; padding: 30px 0 22px; }
+.welcome-row::before, .welcome-row::after { display: none; }
+.welcome-row h1 { font-size: clamp(32px, 3.3vw, 46px); line-height: 1.04; margin: 14px 0 10px; }
+
+/* ---- Countdown: a plain card, no twinkling marquee lights ---- */
+.countdown-card::before { display: none; }
+.countdown-card { box-shadow: none; background: var(--panel-deep); }
+
+/* ---- Game card ---- */
+.game-card { box-shadow: 0 16px 44px #0006; }
+
+/* Clue steps: a simple stepper instead of a film strip */
+.clip-progress::before, .clip-progress::after { display: none; }
+ol.clip-progress { padding: 12px 14px; margin-top: 18px; }
+
+/* Listening stage: smaller artwork, one ring */
+.audio-art { height: 170px; }
+.audio-art::after { display: none; }
+.audio-note { padding-bottom: 12px; }
+
+/* ---- Result of the last guess: clear banner ---- */
+.guess-feedback {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid;
+  font-size: 13px;
+  line-height: 1.45;
+  animation: feedbackIn 0.25s ease-out;
+}
+.guess-feedback strong { font-weight: 700; }
+.guess-feedback-text { color: #d7d9de; }
+.guess-feedback-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+}
+.guess-feedback.is-wrong { background: #2a1214; border-color: #6b2a31; }
+.guess-feedback.is-wrong strong { color: #ffb4b9; }
+.guess-feedback.is-wrong .guess-feedback-icon { background: #e5484d; color: #fff; }
+.guess-feedback.is-wrong { animation: feedbackIn 0.25s ease-out, feedbackShake 0.42s 0.05s ease-in-out; }
+.guess-feedback.is-skip { background: #1d1a10; border-color: #5a4b22; }
+.guess-feedback.is-skip strong { color: #f3d58a; }
+.guess-feedback.is-skip .guess-feedback-icon { background: #c9a43a; color: #1a1406; }
+.guess-feedback.is-error { background: #14161c; border-color: #3a3f4b; }
+.guess-feedback.is-error .guess-feedback-icon { background: #3a3f4b; color: #fff; }
+@keyframes feedbackIn { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes feedbackShake {
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+
+/* Earlier guesses in this game */
+.guess-history { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 12px 0 0; padding: 0; }
+.guess-history li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  border: 1px solid #3a2a2d;
+  color: #e3a8ad;
+  background: #1a1012;
+}
+.guess-history li.is-skipped { border-color: #3d3520; color: #d8c27f; background: #17140b; }
+
+.guess-history { margin-bottom: 14px; }
+
+/* ---- Live visualiser: the bars and the artwork follow the music ----
+   (--beat and --level are set every frame by lib/audio/visualizer.ts) */
+.audio-panel.is-live .waveform { height: 46px; }
+.audio-panel.is-live .waveform i { height: 100% !important; opacity: 0.95 !important; transition: transform 60ms linear; }
+.audio-panel.is-live .vinyl {
+  scale: calc(1 + var(--beat, 0) * 0.1);
+  box-shadow: 0 0 0 7px hsl(var(--accent-h) var(--a-sat-dim) 40% / 0.15), 0 0 calc(30px + var(--beat, 0) * 70px) var(--foil-glow);
+  transition: scale 60ms linear;
+}
+.audio-panel.is-live .audio-art::before { scale: calc(1 + var(--beat, 0) * 0.06); }
+.audio-panel.is-live .art-glow { opacity: calc(0.12 + var(--level, 0) * 0.9); transition: opacity 80ms linear; }
+
+/* Validation hints under the guess box ("Pick a movie from the suggestions list.") */
+.feedback-message:empty { display: none; }
+.feedback-message { font-size: 12px; color: #f3d58a; }
+
+/* ---- Right column: the quote card is gone; the week card spans the row ---- */
+@media (max-width: 850px) {
+  .right-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ---- Phones ---- */
+@media (max-width: 620px) {
+  .welcome-row { padding: 18px 0 14px; }
+  .welcome-row h1 { font-size: 30px; margin: 10px 0 8px; }
+  .welcome-copy { display: none; }
+
+  /* Countdown as one slim row */
+  .countdown-card { margin-top: 14px; padding: 11px 14px; }
+  .countdown-time { font-size: 22px; }
+
+  .game-card-head h2 { font-size: 21px; }
+  ol.clip-progress { padding: 10px; margin-top: 14px; }
+  .audio-art { height: 140px; }
+  .vinyl { width: 72px; height: 72px; }
+  .waveform { bottom: 12%; height: 26px; }
+  .audio-panel.is-live .waveform { height: 38px; }
+
+  .right-rail .week-card { grid-column: 1 / -1; min-height: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guess-feedback, .guess-feedback.is-wrong { animation: none; }
+}
