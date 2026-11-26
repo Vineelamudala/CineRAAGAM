@@ -2,7 +2,7 @@
 
 import { createBrowserClient } from '@supabase/ssr';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { supabaseEnv } from './env';
+import { AUTH_COOKIE_NAME, supabaseEnv } from './env';
 
 let client: SupabaseClient | null | undefined;
 
@@ -10,6 +10,6 @@ let client: SupabaseClient | null | undefined;
 export function getBrowserSupabase(): SupabaseClient | null {
   if (client !== undefined) return client;
   const env = supabaseEnv();
-  client = env ? createBrowserClient(env.url, env.key) : null;
+  client = env ? createBrowserClient(env.url, env.key, { cookieOptions: { name: AUTH_COOKIE_NAME } }) : null;
   return client;
 }

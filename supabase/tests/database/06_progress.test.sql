@@ -47,7 +47,8 @@ from d, unnest(array[-6, -5, -4, -2, -1, 0]) o;
 create function pg_temp.won(u uuid, o int, clue int, at timestamptz default now(), m public.play_mode default 'daily')
 returns void language sql as $$
   insert into public.plays (user_id, challenge_id, challenge_date, mode, status, current_clue, solved_on_clue, points, finished_at)
-  select u, c.id, c.challenge_date, m, 'won', clue, clue, case clue when 1 then 3 when 2 then 2 else 1 end, at
+  select u, c.id, c.challenge_date, m, 'won', clue, clue,
+         case when m = 'time_travel' then 0 else case clue when 1 then 3 when 2 then 2 else 1 end end, at
   from public.daily_challenges c, d where c.challenge_date = d.t + o
 $$;
 create function pg_temp.lost(u uuid, o int) returns void language sql as $$

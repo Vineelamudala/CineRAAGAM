@@ -1,0 +1,47 @@
+# Cineraagam reverse proxy.
+# SITE_ADDRESS = your domain (e.g. cineraagam.in) → automatic HTTPS via Let's Encrypt.
+# For a local test use SITE_ADDRESS=:80 (plain HTTP, no certificate).
+# Security note: with no trusted_proxies configured, Caddy ignores any
+# X-Forwarded-For sent by clients and sets it to the real client IP, which is
+# what GoTrue uses for per-visitor rate limits.
+
+(supabase) {
+	# Supabase services share the site's origin, so the browser needs no CORS
+	# and the Content-Security-Policy stays "self".
+	handle_path /auth/v1/* {
+		reverse_proxy auth:9999
+	}
+	handle_path /rest/v1/* {
+		reverse_proxy rest:3000
+	}
+	handle_path /storage/v1/* {
+		request_body {
+			max_size 60MB
+		}
+		reverse_proxy storage:5000
+	}
+}
+
+{$SITE_ADDRESS} {
+	encode zstd gzip
+	import supabase
+	handle {
+		reverse_proxy app:3000
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+	log {
+		output stdout
+		format console
+		level WARN
+	}
+}
+
+# Private: lets the app container reach the Supabase services over the internal
+# Docker network (SUPABASE_INTERNAL_URL). This port is NOT published.
+:8000 {
+	import supabase
+	respond 404
+}

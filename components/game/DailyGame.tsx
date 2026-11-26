@@ -68,7 +68,8 @@ export function DailyGame({ date }: { date?: string }) {
       else {
         const nextClue = clueInfo(p.current_clue);
         const prefix = movie ? 'Not quite.' : 'Clue skipped.';
-        setMessage(`${prefix} Clue ${nextClue.number} (${nextClue.difficulty} · ${nextClue.points} ${nextClue.points === 1 ? 'point' : 'points'}) is ready.`);
+        const worth = p.mode === 'time_travel' ? nextClue.difficulty : `${nextClue.difficulty} · ${nextClue.points} ${nextClue.points === 1 ? 'point' : 'points'}`;
+        setMessage(`${prefix} Clue ${nextClue.number} (${worth}) is ready.`);
       }
     } catch {
       // Safe to retry: the server ignores duplicate submissions for a clue.
@@ -127,13 +128,13 @@ export function DailyGame({ date }: { date?: string }) {
         {!finished && (
           <div className="difficulty-wrap clue-badge">
             <span>CLUE {current.number}</span>
-            <strong>{current.difficulty} · {current.points} {current.points === 1 ? 'pt' : 'pts'}</strong>
+            <strong>{timeTravel ? current.difficulty : `${current.difficulty} · ${current.points} ${current.points === 1 ? 'pt' : 'pts'}`}</strong>
           </div>
         )}
       </div>
 
       {timeTravel && (
-        <p className="m-0 mt-3 text-[11px] text-muted">Time Travel is just for fun: points shown here don’t count for leaderboards or streaks.</p>
+        <p className="m-0 mt-3 text-[11px] text-muted">Time Travel is just for fun: no points, and it never affects leaderboards or streaks.</p>
       )}
 
       <ol className="clip-progress" aria-label="Clues">

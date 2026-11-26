@@ -20,6 +20,13 @@ export default async function globalSetup() {
   process.env.E2E_ANSWER_TITLE = movie.title;
   process.env.E2E_ANSWER_YEAR = String(movie.release_year ?? '');
 
+  // Alias used by the autocomplete test (real catalogues get aliases from admins).
+  // (Wikidata spells it "Ala Vaikunthapurramloo"; the local seed "…ramuloo".)
+  const { data: avpl } = await db.from('movies').select('id, aliases').ilike('title', 'Ala Vaikunthapurram%').limit(1).maybeSingle();
+  if (avpl && !avpl.aliases.includes('AVPL')) {
+    await db.from('movies').update({ aliases: [...avpl.aliases, 'AVPL'] }).eq('id', avpl.id);
+  }
+
   // Local-only test admins with fixed passwords; the 2FA admin starts without 2FA.
   await createAdmin(db, E2E_ADMIN.email, E2E_ADMIN.password);
   await createAdmin(db, E2E_MFA_ADMIN.email, E2E_MFA_ADMIN.password);

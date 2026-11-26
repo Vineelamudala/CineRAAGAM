@@ -1,14 +1,15 @@
 import 'server-only';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { supabaseEnv } from './env';
+import { AUTH_COOKIE_NAME, serverSupabaseEnv } from './env';
 
 /** Supabase client for Server Components, Route Handlers and Server Actions. */
 export async function getServerSupabase() {
-  const env = supabaseEnv();
+  const env = serverSupabaseEnv();
   if (!env) return null;
   const cookieStore = await cookies();
   return createServerClient(env.url, env.key, {
+    cookieOptions: { name: AUTH_COOKIE_NAME },
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll: toSet => {

@@ -8,7 +8,7 @@ const RULES: [string, string, string][] = [
   ['03', 'Wrong or skip? Easier clue', 'A wrong guess or a skip unlocks the next, easier clue: Hard, then Medium, then Easy.'],
   ['04', 'Earn points', 'Solve on clue 1 for 3 points, clue 2 for 2 points, clue 3 for 1 point. Not solved: 0 points.'],
   ['05', 'Keep your streak', 'Your streak counts consecutive days on which you solved the daily movie. A new challenge starts at midnight IST — finish before then, or an unfinished game moves to Time Travel.'],
-  ['06', 'Reveal, share, time travel', 'After the game the movie and cast are revealed. Share your result spoiler-free, or replay past days in Time Travel (just for fun — no leaderboard points).'],
+  ['06', 'Reveal, share, time travel', 'After the game the movie and cast are revealed. Share your result spoiler-free, or replay past days in Time Travel (just for fun — no points).'],
 ];
 
 export default function HowToPlayPage() {

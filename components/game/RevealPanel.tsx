@@ -46,10 +46,11 @@ export function RevealPanel({ state }: Props) {
       {reveal.cast.length > 0 && <p className="reveal-cast">Starring {reveal.cast.join(' · ')}</p>}
 
       <div className="result-score">
-        <div><strong>{points}</strong><span>{timeTravel ? 'POINTS · FOR FUN' : points === 1 ? 'POINT' : 'POINTS'}</span></div>
+        {!timeTravel && <div><strong>{points}</strong><span>{points === 1 ? 'POINT' : 'POINTS'}</span></div>}
         <div><strong>{state.guesses.length}</strong><span>CLUES USED</span></div>
         <div><strong>{won ? 'SOLVED' : 'MISSED'}</strong><span>RESULT</span></div>
       </div>
+      {timeTravel && <p className="m-0 -mt-2 mb-4 text-[11px] text-muted">Time Travel · just for fun, no points</p>}
 
       <ol className="m-0 mb-5 flex list-none flex-wrap justify-center gap-x-4 gap-y-1 p-0 text-[11px] text-muted" aria-label="Your guesses">
         {state.guesses.map(g => (

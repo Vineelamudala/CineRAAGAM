@@ -102,7 +102,7 @@ test.describe('daily game (server-validated)', () => {
 
   test('alternate names match (AVPL)', async ({ page }) => {
     await guessBox(page).fill('avpl');
-    await expect(page.getByRole('option', { name: /Ala Vaikunthapurramuloo/ })).toBeVisible();
+    await expect(page.getByRole('option', { name: /Ala Vaikunthapurram/ }).first()).toBeVisible();
   });
 
   test('countdown shows a time until the next IST midnight', async ({ page }) => {
@@ -120,8 +120,11 @@ test.describe('time travel', () => {
     await expect(page).toHaveURL(/\/time-travel\/\d{4}-\d{2}-\d{2}$/);
     await expect(page.getByText(/TIME TRAVEL/).first()).toBeVisible();
     await expect(page.getByText(/just for fun/)).toBeVisible();
+    await expect(page.locator('.clue-badge')).toHaveText(/CLUE 1\s*Hard$/); // no points on the badge
     for (let i = 0; i < 3; i++) await page.getByRole('button', { name: /Skip this clue/ }).click();
-    await expect(page.getByText('POINTS · FOR FUN')).toBeVisible();
+    await expect(page.getByText('Time Travel · just for fun, no points')).toBeVisible();
+    await expect(page.locator('.result-score')).not.toContainText('POINT'); // no points shown at all
+    await expect(page.locator('.clue-badge')).toHaveCount(0);
   });
 
   test('calendar, filters, list view and "surprise me"', async ({ page }) => {

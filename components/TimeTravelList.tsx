@@ -25,7 +25,11 @@ const fmt = (iso: string) =>
   new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 
 function describe(c: PastChallenge): { label: string; icon: React.ReactNode; tone: string } {
-  if (c.status === 'won') return { label: `Solved · ${c.points} ${c.points === 1 ? 'pt' : 'pts'}${c.mode === 'time_travel' ? ' (for fun)' : ''}`, icon: <Check size={14} />, tone: 'text-success' };
+  if (c.status === 'won') {
+    // Points only exist for days solved as the official daily game; Time Travel gives none.
+    const label = c.mode === 'time_travel' ? 'Solved in Time Travel' : `Solved · ${c.points} ${c.points === 1 ? 'pt' : 'pts'}`;
+    return { label, icon: <Check size={14} />, tone: 'text-success' };
+  }
   if (c.status === 'lost') return { label: 'Missed', icon: <X size={14} />, tone: 'text-danger' };
   if (c.status === 'playing') return { label: 'In progress', icon: <CircleDot size={14} />, tone: 'text-accent' };
   return { label: 'Not played', icon: <Play size={13} />, tone: 'text-muted' };

@@ -22,6 +22,10 @@ playwright/.cache/
 .env.*
 !.env.example
 
+# production deploy secrets & backups (never commit)
+deploy/.env
+deploy/backups/
+
 # supabase local
 supabase/.branches/
 supabase/.temp/

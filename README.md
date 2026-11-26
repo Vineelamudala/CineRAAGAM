@@ -23,14 +23,19 @@ Free and open-source stack, self-hostable, no player logins.
   break it until you lose (or midnight passes unsolved).
 - A new challenge starts at **00:00 IST**. A daily game must be finished that day:
   after midnight an unfinished game turns into a Time Travel game (0 leaderboard
-  points, streak not extended), which you can still finish for fun.
+  points, streak not extended), which you can still finish for fun (no points).
 - **Leaderboards:** weekly (resets Monday 00:00 IST), monthly and all-time, by points.
   Ties go to more days solved, then to whoever reached the total first. Only named,
   non-hidden players appear; admins are left out.
-- **Time Travel:** play past days for fun. It shows "would-have" points in your
-  history but never counts toward leaderboards or streaks.
+- **Time Travel:** replay past days just for fun. Time Travel gives **no points**
+  and never counts toward leaderboards or streaks.
 - **No login:** players get a silent anonymous identity and only choose a display
   name. Clearing browser data or switching device starts a fresh identity.
+
+## Deploying
+
+See **[DEPLOY.md](DEPLOY.md)** for running Cineraagam on your own server, with HTTPS,
+self-hosted Supabase and daily backups. It takes about 30 minutes.
 
 ## Run locally
 
@@ -189,4 +194,6 @@ utilities on the same element. Retire them as each component is rebuilt.
   worker, offline page, install button), live Web Audio visualiser, cached compact
   catalogue endpoint (/api/catalog), accessibility pass (axe-core audit clean on every
   page, skip link, focus handling, readable minimum text sizes), robots.txt, social metadata.
-- [ ] **Phase 7 — Production:** Docker Compose (app + self-hosted Supabase + Caddy), backups.
+- [x] **Phase 7 — Production:** Docker Compose with the app, a trimmed self-hosted
+  Supabase (Postgres, Auth, REST, Storage), Caddy (automatic HTTPS, single origin),
+  a migration runner, daily backups with tested restore, operator tools. See [DEPLOY.md](DEPLOY.md).

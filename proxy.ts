@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { supabaseEnv } from '@/lib/supabase/env';
+import { AUTH_COOKIE_NAME, serverSupabaseEnv } from '@/lib/supabase/env';
 
 /**
  * Runs before matching requests (Next.js 16 "proxy", formerly middleware).
@@ -14,11 +14,12 @@ import { supabaseEnv } from '@/lib/supabase/env';
  * auth rate limit applies per visitor IP rather than to this server.
  */
 export async function proxy(request: NextRequest) {
-  const env = supabaseEnv();
+  const env = serverSupabaseEnv();
   let response = NextResponse.next({ request });
   if (!env) return response;
 
   const supabase = createServerClient(env.url, env.key, {
+    cookieOptions: { name: AUTH_COOKIE_NAME },
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll: toSet => {

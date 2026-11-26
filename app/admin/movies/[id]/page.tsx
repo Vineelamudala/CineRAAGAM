@@ -134,7 +134,7 @@ export default function AdminMoviePage({ params }: { params: Promise<{ id: strin
               <Field label="Release year" htmlFor="m-year"><Input id="m-year" type="number" min={1930} max={2100} value={form.year} onChange={e => setForm({ ...form, year: e.target.value })} /></Field>
               <Field label="IMDb id" htmlFor="m-imdb"><Input id="m-imdb" pattern="tt\d+" placeholder="tt1234567" value={form.imdb} onChange={e => setForm({ ...form, imdb: e.target.value })} /></Field>
             </div>
-            <Field label="Other names (comma separated)" htmlFor="m-aliases" hint="Players can find the movie by these too, e.g. AVPL.">
+            <Field label="Other names (comma separated)" htmlFor="m-aliases" hint="Players can find the movie by these too, e.g. AVPL. Name changes reach the players’ autocomplete within about 10 minutes.">
               <Input id="m-aliases" value={form.aliases} onChange={e => setForm({ ...form, aliases: e.target.value })} />
             </Field>
             <label className="flex items-center gap-2 text-[12px] text-muted">

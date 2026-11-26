@@ -82,6 +82,14 @@ select throws_ok($$ insert into public.plays (user_id, challenge_id, challenge_d
   values ('11111111-1111-1111-1111-111111111111', 'f0000000-0000-0000-0000-000000000001', '2026-12-01', 'daily', 'won', 3, 1, 3, now()) $$,
   '23514', null, 'solved_on_clue must equal the clue being played');
 
+select throws_ok($$ insert into public.plays (user_id, challenge_id, challenge_date, mode, status, current_clue, solved_on_clue, points, finished_at)
+  values ('11111111-1111-1111-1111-111111111111', 'f0000000-0000-0000-0000-000000000001', '2026-12-01', 'time_travel', 'won', 1, 1, 3, now()) $$,
+  '23514', null, 'a Time Travel game can never store points');
+select lives_ok($$ insert into public.plays (user_id, challenge_id, challenge_date, mode, status, current_clue, solved_on_clue, points, finished_at)
+  values ('11111111-1111-1111-1111-111111111111', 'f0000000-0000-0000-0000-000000000001', '2026-12-01', 'time_travel', 'won', 1, 1, 0, now()) $$,
+  'a Time Travel win is stored with 0 points');
+delete from public.plays;
+
 -- ---- one play per player per challenge; one guess per clue ----
 insert into public.plays (id, user_id, challenge_id, challenge_date, mode)
   values ('a0000000-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'f0000000-0000-0000-0000-000000000001', '2026-12-01', 'daily');

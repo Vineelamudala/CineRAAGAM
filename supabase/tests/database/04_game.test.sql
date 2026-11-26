@@ -94,6 +94,10 @@ select is(public.submit_guess((select today from d), 3, 'd0000000-0000-0000-0000
 -- past day = time travel
 select is(public.submit_guess((select today - 1 from d), 1, 'd0000000-0000-0000-0000-00000000000a') -> 'play' ->> 'mode', 'time_travel',
   'playing a past day is a time-travel play');
+select is((public.get_challenge((select today - 1 from d)) -> 'play' ->> 'points')::int, 0,
+  'solving a past day on clue 1 in Time Travel gives NO points');
+select is(public.get_challenge((select today - 1 from d)) -> 'play' ->> 'status', 'won',
+  '...but it is still recorded as solved');
 
 reset role;
 

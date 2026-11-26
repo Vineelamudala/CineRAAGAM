@@ -1,0 +1,17 @@
+# Keep the build context small and free of secrets
+node_modules
+.next
+.git
+.env
+.env.*
+!.env.example
+deploy/.env
+deploy/backups
+supabase/.temp
+supabase/.branches
+test-results
+playwright-report
+coverage
+*.log
+.vscode
+.idea

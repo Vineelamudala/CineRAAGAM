@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
-import { supabaseEnv } from '@/lib/supabase/env';
+import { serverSupabaseEnv } from '@/lib/supabase/env';
 
 /**
  * The public movie catalogue for autocomplete, in one compact cached response
@@ -15,7 +15,7 @@ const TTL_MS = 10 * 60 * 1000;
 let cache: { at: number; body: string; etag: string } | null = null;
 
 async function build(): Promise<{ body: string; etag: string }> {
-  const env = supabaseEnv();
+  const env = serverSupabaseEnv();
   if (!env) throw new Error('Supabase not configured');
   const db = createClient(env.url, env.key, { auth: { persistSession: false, autoRefreshToken: false } });
   const rows: [string, string, number | null, string[]?][] = [];

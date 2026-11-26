@@ -17,7 +17,12 @@ function Result({ e, today }: { e: HistoryEntry; today: string }) {
   const tt = e.mode === 'time_travel';
   const playHref = e.date === today ? '/' : `/time-travel/${e.date}`;
   if (e.status === 'won') {
-    return <span className="flex items-center gap-1.5 text-success"><Check size={14} aria-hidden="true" /> Solved on clue {e.solved_on_clue} · {e.points} {e.points === 1 ? 'pt' : 'pts'}{tt ? ' (for fun)' : ''}</span>;
+    return (
+      <span className="flex items-center gap-1.5 text-success">
+        <Check size={14} aria-hidden="true" /> Solved on clue {e.solved_on_clue}
+        {tt ? ' · Time Travel (no points)' : ` · ${e.points} ${e.points === 1 ? 'pt' : 'pts'}`}
+      </span>
+    );
   }
   if (e.status === 'lost') return <span className="flex items-center gap-1.5 text-danger"><X size={14} aria-hidden="true" /> Missed{tt ? ' (time travel)' : ''}</span>;
   if (e.status === 'playing') return <Link href={playHref} className="flex items-center gap-1.5 text-accent"><CircleDot size={14} aria-hidden="true" /> In progress — continue</Link>;
