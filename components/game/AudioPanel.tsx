@@ -61,6 +61,10 @@ export function AudioPanel({ clue, path, durationMs, kind }: Props) {
         if (cancelled) return;
         url = URL.createObjectURL(clip.blob);
         setBlobUrl(url);
+        // The whole clip is in memory, so Play can be pressed now. Don't wait for the
+        // <audio> element's "canplay": iPhones (Safari and in-app browsers such as
+        // Instagram's) load audio only after a tap on Play, so it would never come.
+        setStatus(s => (s === 'loading' ? 'ready' : s));
       },
       () => { if (!cancelled) setStatus('error'); },
     );

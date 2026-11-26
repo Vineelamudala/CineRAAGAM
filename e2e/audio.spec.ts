@@ -1,6 +1,29 @@
 import { expect, test } from '@playwright/test';
 import { adminClient, istDate } from '../scripts/dev-seed.mjs';
 
+/**
+ * iPhones (Safari and in-app browsers like Instagram's) don't load audio until the
+ * player taps Play, so "canplay" never fires before that tap. Simulate that: the
+ * Play button must still become available and the clue must play.
+ */
+test('iPhone-style audio (loads only after tapping Play) still plays', async ({ page }) => {
+  await page.addInitScript(() => {
+    let tapped = false;
+    const play = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function (this: HTMLMediaElement) { tapped = true; return play.call(this); };
+    for (const type of ['canplay', 'canplaythrough', 'loadeddata']) {
+      window.addEventListener(type, e => { if (!tapped) e.stopImmediatePropagation(); }, true);
+    }
+  });
+  await page.goto('/');
+  await page.getByRole('dialog').getByRole('button', { name: 'Maybe later' }).click();
+  const play = page.getByRole('button', { name: 'Play clue', exact: true });
+  await expect(play).toBeEnabled();
+  await play.click();
+  await expect(page.getByText(/Playing clue|Buffering/)).toBeVisible();
+  await expect.poll(() => page.locator('audio').evaluate((a: HTMLAudioElement) => a.currentTime)).toBeGreaterThan(0.3);
+});
+
 /** Audio is served through /api/clip (CDN-cacheable) without weakening the clue locks. */
 test('clue audio is served via /api/clip with CDN caching, and locked clues stay locked', async ({ page, isMobile }) => {
   test.skip(isMobile, 'same server behaviour on mobile');
