@@ -1,31 +1,14 @@
 'use client';
 
-/**
- * Live audio visualiser using the Web Audio API (no dependencies).
- * Each <audio> element can be wired into the graph only once, so analysers
- * are cached per element. The clip must be CORS-readable (crossOrigin="anonymous";
- * Supabase Storage sends Access-Control-Allow-Origin: *).
- */
-let context: AudioContext | null = null;
-const analysers = new WeakMap<HTMLAudioElement, AnalyserNode>();
+import { frameAt, type Spectrum } from './spectrum';
 
-function analyserFor(audio: HTMLAudioElement): AnalyserNode {
-  const existing = analysers.get(audio);
-  if (existing) return existing;
-  context ??= new AudioContext();
-  const source = context.createMediaElementSource(audio);
-  const analyser = context.createAnalyser();
-  analyser.fftSize = 256;
-  // Snappier than the default so drum hits and note changes show up as they happen.
-  analyser.smoothingTimeConstant = 0.55;
-  // A wider loudness window than the default gives quiet passages and peaks visibly different bars.
-  analyser.minDecibels = -90;
-  analyser.maxDecibels = -22;
-  source.connect(analyser);
-  analyser.connect(context.destination);
-  analysers.set(audio, analyser);
-  return analyser;
-}
+/**
+ * Audio visualiser (no dependencies). The bars follow a spectrum computed from
+ * the clip file itself (lib/audio/spectrum.ts), synced to audio.currentTime.
+ * This works on every device: live Web Audio analysis of an <audio> element
+ * gets no data on many phones, and can mute playback if started at the wrong
+ * moment, so it is not used.
+ */
 
 /** Map bar i of n to a frequency bin, giving low/mid frequencies more bars (they carry the music). */
 export function binForBar(i: number, bars: number, bins: number): number {
@@ -57,39 +40,61 @@ export function createBeatDetector(): (bass: number) => number {
   };
 }
 
+type Options = {
+  /** The clip's spectrum (from loadSpectrum); null when the browser can't decode the file. */
+  spectrum: Promise<Spectrum | null>;
+  /** Receives --beat (0..1, bass kicks) and --level (0..1, loudness) every frame. */
+  stage?: HTMLElement;
+  /** Called with true once the bars follow the music (false if they can't). */
+  onLive?: (live: boolean) => void;
+  /** Diagnostics target, used only when the page URL contains ?debug=viz. */
+  debugEl?: HTMLElement;
+};
+
 /**
- * Starts animating `bars` from `audio`. Call from a user gesture (play).
- * If `stage` is given, it receives two CSS variables every frame:
- * --beat (0..1, bass kicks) and --level (0..1, overall loudness).
- * Returns a stop function. Returns null when unsupported (bars stay decorative).
+ * Starts animating `bars` in time with `audio` (call when playback starts).
+ * Runs even with "reduce motion" on: many Android phones turn that on in battery
+ * saver, and the bars only move while the player has pressed play. The extra
+ * effects (reel pulse, glow) are switched off for reduce motion in CSS instead.
+ * Returns a stop function.
  */
-export async function startVisualizer(audio: HTMLAudioElement, bars: HTMLElement[], stage?: HTMLElement): Promise<(() => void) | null> {
-  // Runs even with "reduce motion" on: many Android phones turn that on in battery
-  // saver, and the bars only move while the player has pressed play. The extra
-  // effects (reel pulse, glow) are switched off for reduce motion in CSS instead.
-  if (typeof AudioContext === 'undefined' || bars.length === 0) return null;
-  let analyser: AnalyserNode;
-  try {
-    analyser = analyserFor(audio);
-    if (context!.state === 'suspended') await context!.resume();
-  } catch {
-    return null;
-  }
-  const data = new Uint8Array(analyser.frequencyBinCount);
-  const map = bars.map((_, i) => binForBar(i, bars.length, data.length));
+export function startVisualizer(audio: HTMLAudioElement, bars: HTMLElement[], { spectrum: pending, stage, onLive, debugEl }: Options): () => void {
+  const debug = debugEl && typeof location !== 'undefined' && /[?&]debug=viz\b/.test(location.search) ? debugEl : null;
+  const report = (text: string) => { if (debug) debug.textContent = text; };
+  let spectrum: Spectrum | null = null;
+  let stopped = false;
+  report('viz: analysing the clip…');
+  pending.then(s => {
+    if (stopped) return;
+    spectrum = s;
+    onLive?.(!!s);
+    if (!s) report('viz: this browser could not decode the clip; bars use the simple pulse');
+  });
+
+  const bins = 128;
+  const map = bars.map((_, i) => binForBar(i, bars.length, bins));
   // Mirror the spectrum around the centre so the waveform looks symmetric.
   const mid = (bars.length - 1) / 2;
   const order = bars.map((_, i) => map[Math.round((Math.abs(i - mid) / Math.max(1, mid)) * (bars.length - 1))]);
   const detectBeat = createBeatDetector();
-  const bassBins = Math.max(2, Math.round(data.length * 0.05));
+  const bassBins = Math.max(2, Math.round(bins * 0.05));
   let raf = 0;
+  let frames = 0;
+  let peak = 0;
   const frame = () => {
-    analyser.getByteFrequencyData(data);
+    raf = requestAnimationFrame(frame);
+    if (!spectrum) return; // still analysing (or not decodable): bars keep their idle look
+    const data = frameAt(spectrum, audio.currentTime);
     let total = 0;
     let bass = 0;
     for (let k = 0; k < data.length; k++) {
       total += data[k];
       if (k < bassBins) bass += data[k];
+      if (data[k] > peak) peak = data[k];
+    }
+    if (debug && ++frames % 15 === 0) {
+      report(`viz: following the clip | audio ${audio.paused ? 'paused' : 'playing'} t=${audio.currentTime.toFixed(1)}s | `
+        + `level now=${Math.round(total / data.length)} peak=${peak} | frames=${frames} | reduceMotion=${matchMedia('(prefers-reduced-motion: reduce)').matches} | ${navigator.userAgent.replace(/^Mozilla\/5\.0 /, '').slice(0, 90)}`);
     }
     for (let i = 0; i < bars.length; i++) {
       bars[i].style.transform = `scaleY(${barScale(data[order[i]] / 255).toFixed(3)})`;
@@ -98,10 +103,10 @@ export async function startVisualizer(audio: HTMLAudioElement, bars: HTMLElement
       stage.style.setProperty('--beat', detectBeat(bass / bassBins / 255).toFixed(3));
       stage.style.setProperty('--level', (total / data.length / 255).toFixed(3));
     }
-    raf = requestAnimationFrame(frame);
   };
   raf = requestAnimationFrame(frame);
   return () => {
+    stopped = true;
     cancelAnimationFrame(raf);
     for (const b of bars) b.style.transform = '';
     stage?.style.removeProperty('--beat');

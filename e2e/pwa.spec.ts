@@ -76,6 +76,29 @@ test('on phones with "reduce motion" (e.g. battery saver) the bars still follow 
   expect(await page.locator('.vinyl').evaluate(e => getComputedStyle(e).scale)).toBe('none');
 });
 
+test('the bars follow the clip even where live audio analysis is unavailable (many phones)', async ({ page }) => {
+  // Live Web Audio analysis of an <audio> element gets no data on many phones.
+  // The visualiser must not depend on it: remove it completely.
+  await page.addInitScript(() => {
+    // @ts-expect-error removing the API on purpose
+    delete window.AudioContext;
+    // @ts-expect-error removing the API on purpose
+    delete window.webkitAudioContext;
+  });
+  await page.goto('/?debug=viz');
+  await page.getByRole('dialog').getByRole('button', { name: 'Maybe later' }).click();
+  await page.getByRole('button', { name: 'Play clue', exact: true }).click();
+  await expect(page.locator('.audio-panel.is-live')).toBeVisible();
+  const sample = () => page.locator('.waveform i').evaluateAll(els => els.map(e => (e as HTMLElement).style.transform));
+  await page.waitForTimeout(500);
+  const a = await sample();
+  await page.waitForTimeout(500);
+  const b = await sample();
+  expect(new Set(a).size).toBeGreaterThan(3);
+  expect(a).not.toEqual(b);
+  await expect(page.locator('.viz-debug')).toContainText('following the clip');
+});
+
 test('the catalogue endpoint serves the public movie list with caching', async ({ request }) => {
   const res = await request.get('/api/catalog');
   expect(res.ok()).toBe(true);

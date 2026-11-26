@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Headphones, Loader2, Music2, Play, RotateCcw } from 'lucide-react';
+import { loadSpectrum } from '@/lib/audio/spectrum';
 import { startVisualizer } from '@/lib/audio/visualizer';
 
 const BARS = Array.from({ length: 57 }, (_, i) => ({ height: 14 + ((i * 19 + 7) % 54), opacity: 0.35 + (i % 5) * 0.13, delay: (i % 7) * 0.11 }));
@@ -36,6 +37,7 @@ export function AudioPanel({ clue, path, durationMs, kind }: Props) {
   const [live, setLive] = useState(false);
   const waveRef = useRef<HTMLDivElement>(null);
   const artRef = useRef<HTMLDivElement>(null); // receives --beat / --level from the visualiser
+  const debugRef = useRef<HTMLPreElement>(null); // visualiser diagnostics (only with ?debug=viz)
   const stopVizRef = useRef<(() => void) | null>(null);
 
   function stopViz() {
@@ -48,14 +50,21 @@ export function AudioPanel({ clue, path, durationMs, kind }: Props) {
   const durationSec = durationMs / 1000;
   const playing = status === 'playing' || status === 'buffering';
 
+  // Analyse the clip as soon as it is available, so the bars are ready when Play is pressed.
+  // (Same URL as the <audio> element, so it comes from the browser cache.)
+  useEffect(() => { loadSpectrum(src); }, [src]);
+
   async function play(fromStart: boolean) {
     const audio = audioRef.current;
     if (!audio) return;
     if (fromStart) audio.currentTime = 0;
-    // Start the live visualiser from this user gesture (browsers require one for Web Audio).
     if (!stopVizRef.current && waveRef.current) {
-      stopVizRef.current = await startVisualizer(audio, Array.from(waveRef.current.querySelectorAll('i')), artRef.current ?? undefined);
-      setLive(!!stopVizRef.current);
+      stopVizRef.current = startVisualizer(audio, Array.from(waveRef.current.querySelectorAll('i')), {
+        spectrum: loadSpectrum(src),
+        stage: artRef.current ?? undefined,
+        debugEl: debugRef.current ?? undefined,
+        onLive: setLive,
+      });
     }
     try {
       await audio.play();
@@ -145,6 +154,7 @@ export function AudioPanel({ clue, path, durationMs, kind }: Props) {
         )}
       </div>
       <div className="audio-note"><Headphones size={14} aria-hidden="true" /> Replay as often as you like. It never uses up a guess.</div>
+      <pre ref={debugRef} className="viz-debug" aria-hidden="true" />
     </div>
   );
 }
