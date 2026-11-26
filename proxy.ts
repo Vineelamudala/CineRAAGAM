@@ -39,6 +39,8 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // Skip static files, images and the manifest.
-    '/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|robots.txt|api/catalog|offline|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp3|ogg|woff2?)$).*)',
+    // api/clip is excluded so the proxy never attaches refreshed session cookies
+    // to audio responses (a Set-Cookie header would stop the CDN caching them).
+    '/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|robots.txt|api/catalog|api/clip|offline|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp3|ogg|woff2?)$).*)',
   ],
 };

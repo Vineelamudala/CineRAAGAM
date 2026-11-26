@@ -1,0 +1,99 @@
+# Daily encrypted backup of the hosted Supabase project (free plan has no backups),
+# plus a keep-alive request so the free project is never paused for inactivity.
+#
+# Set these repository secrets (Settings → Secrets and variables → Actions):
+#   SUPABASE_DB_URL           Postgres connection string — use the "Session pooler" one
+#                             (GitHub runners have no IPv6, the direct one won't connect)
+#   SUPABASE_URL              https://<project-ref>.supabase.co
+#   SUPABASE_PUBLISHABLE_KEY  the publishable (anon) key
+#   SUPABASE_SECRET_KEY       the secret (service) key — needed to read the private audio
+#   BACKUP_PASSPHRASE         a long passphrase YOU keep safe; backups are useless without it
+#
+# Backups appear under Actions → Daily backup → (run) → Artifacts, kept 30 days.
+# Decrypt:  openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in cineraagam-<time>.tar.gz.enc \
+#             -out backup.tar.gz -pass pass:'<your passphrase>' && tar -xzf backup.tar.gz
+name: Daily backup
+
+on:
+  schedule:
+    - cron: '30 21 * * *' # 03:00 IST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+    steps:
+      - name: Check configuration
+        id: cfg
+        run: |
+          missing=""
+          for v in SUPABASE_DB_URL SUPABASE_URL SUPABASE_PUBLISHABLE_KEY SUPABASE_SECRET_KEY BACKUP_PASSPHRASE; do
+            [ -n "${!v}" ] || missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then
+            echo "::notice::Backups are not configured yet (missing secrets:$missing). Skipping."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Keep the free project awake
+        if: steps.cfg.outputs.enabled == 'true'
+        run: curl -fsS "$SUPABASE_URL/rest/v1/movies?select=id&limit=1" -H "apikey: $SUPABASE_PUBLISHABLE_KEY" -o /dev/null
+
+      - uses: actions/checkout@v4
+        if: steps.cfg.outputs.enabled == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.cfg.outputs.enabled == 'true'
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        if: steps.cfg.outputs.enabled == 'true'
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Dump game data (players, plays, movies, schedule, admin accounts)
+        if: steps.cfg.outputs.enabled == 'true'
+        run: |
+          mkdir -p out
+          docker run --rm -v "$PWD/out:/out" -e DB_URL="$SUPABASE_DB_URL" postgres:17 \
+            sh -c 'pg_dump "$DB_URL" --format=custom --data-only \
+              --schema=public --schema=auth --schema=storage \
+              --exclude-table=auth.schema_migrations --exclude-table=storage.migrations \
+              --file=/out/db.dump'
+
+      - name: Download audio clips
+        if: steps.cfg.outputs.enabled == 'true'
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        run: node scripts/storage-backup.mjs backup out/clips
+
+      - name: Encrypt
+        id: enc
+        if: steps.cfg.outputs.enabled == 'true'
+        run: |
+          stamp=$(date -u +%Y%m%dT%H%M%SZ)
+          file="cineraagam-$stamp.tar.gz.enc"
+          tar -czf - -C out . | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:BACKUP_PASSPHRASE -out "$file"
+          echo "file=$file" >> "$GITHUB_OUTPUT"
+          ls -lh "$file"
+
+      - uses: actions/upload-artifact@v4
+        if: steps.cfg.outputs.enabled == 'true'
+        with:
+          name: ${{ steps.enc.outputs.file }}
+          path: ${{ steps.enc.outputs.file }}
+          retention-days: 30
+          if-no-files-found: error

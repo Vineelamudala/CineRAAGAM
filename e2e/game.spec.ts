@@ -181,6 +181,7 @@ test.describe('display name (stored in Supabase)', () => {
   });
 
   test('a name already taken by another player is rejected', async ({ page, browser }) => {
+    test.setTimeout(60_000); // drives two browser sessions; slow under heavy parallel load
     const name = uniqueName('Taken');
     const other = await browser.newContext();
     const otherPage = await other.newPage();

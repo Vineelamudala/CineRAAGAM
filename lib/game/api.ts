@@ -120,12 +120,6 @@ export async function getMyHistory(supabase: SupabaseClient, limit = 30, offset 
   return (data as HistoryEntry[]) ?? [];
 }
 
-/** Short-lived URL for an unlocked clue (Storage RLS refuses locked clues). */
-export async function signClipUrl(supabase: SupabaseClient, path: string): Promise<string> {
-  const { data, error } = await supabase.storage.from('clips').createSignedUrl(path, 60 * 30);
-  if (error || !data) throw new GameApiError(error?.message ?? 'Could not load audio');
-  return data.signedUrl;
-}
 
 // The catalogue rarely changes during a visit: fetch it once per page load.
 let catalogPromise: Promise<MovieOption[]> | null = null;

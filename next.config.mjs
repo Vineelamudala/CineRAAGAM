@@ -38,8 +38,9 @@ const securityHeaders = [
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  // Self-contained server bundle for the Docker image (Phase 7).
-  output: 'standalone',
+  // Self-contained server bundle for the Docker image (deploy/). Vercel builds
+  // its own way, so only use it elsewhere.
+  output: process.env.VERCEL ? undefined : 'standalone',
   async headers() {
     return [
       { source: '/:path*', headers: securityHeaders },

@@ -3,8 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Headphones, Loader2, Music2, Play, RotateCcw, Volume2 } from 'lucide-react';
 import { startVisualizer } from '@/lib/audio/visualizer';
-import { signClipUrl } from '@/lib/game/api';
-import { getBrowserSupabase } from '@/lib/supabase/browser';
 
 const BARS = Array.from({ length: 57 }, (_, i) => ({ height: 14 + ((i * 19 + 7) % 54), opacity: 0.35 + (i % 5) * 0.13, delay: (i % 7) * 0.11 }));
 
@@ -29,10 +27,12 @@ type Props = {
  */
 export function AudioPanel({ clue, path, durationMs, kind }: Props) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [src, setSrc] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>('loading');
   const [time, setTime] = useState(0);
   const [attempt, setAttempt] = useState(0);
+  // Audio comes through our own /api/clip endpoint (CDN-cached; the server checks
+  // the clue is unlocked for this player). `retry` only changes on a manual retry.
+  const src = `/api/clip/${path}${attempt ? `?retry=${attempt}` : ''}`;
   const [live, setLive] = useState(false);
   const waveRef = useRef<HTMLDivElement>(null);
   const stopVizRef = useRef<(() => void) | null>(null);
@@ -44,22 +44,12 @@ export function AudioPanel({ clue, path, durationMs, kind }: Props) {
   }
   useEffect(() => () => { stopVizRef.current?.(); }, []);
 
-  useEffect(() => {
-    const supabase = getBrowserSupabase();
-    if (!supabase) return;
-    let cancelled = false;
-    signClipUrl(supabase, path)
-      .then(url => { if (!cancelled) setSrc(url); })
-      .catch(() => { if (!cancelled) setStatus('error'); });
-    return () => { cancelled = true; };
-  }, [path, attempt]);
-
   const durationSec = durationMs / 1000;
   const playing = status === 'playing' || status === 'buffering';
 
   async function play(fromStart: boolean) {
     const audio = audioRef.current;
-    if (!audio || !src) return;
+    if (!audio) return;
     if (fromStart) audio.currentTime = 0;
     // Start the live visualiser from this user gesture (browsers require one for Web Audio).
     if (!stopVizRef.current && waveRef.current) {
@@ -83,7 +73,6 @@ export function AudioPanel({ clue, path, durationMs, kind }: Props) {
 
   function retry() {
     setStatus('loading');
-    setSrc(null);
     setAttempt(a => a + 1);
   }
 

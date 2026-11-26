@@ -118,7 +118,9 @@ export function ClipUploader({ movieId, onUploaded }: { movieId: string; onUploa
     src.buffer = buffer;
     const gain = ctx.createGain();
     src.connect(gain).connect(dest);
-    const recorder = new MediaRecorder(dest.stream, { mimeType: format.mime, audioBitsPerSecond: 128_000 });
+    // 64 kbps Opus: clean for short music clips and half the size of 128 kbps,
+    // which doubles how many players the free hosting bandwidth can serve.
+    const recorder = new MediaRecorder(dest.stream, { mimeType: format.mime, audioBitsPerSecond: 64_000 });
     const chunks: Blob[] = [];
     recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
     const stopped = new Promise<void>(resolve => { recorder.onstop = () => resolve(); });
