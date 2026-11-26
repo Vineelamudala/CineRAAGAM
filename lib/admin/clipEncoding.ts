@@ -14,6 +14,12 @@ export function clampSelection(start: number, length: number, total: number): { 
   return { start: Math.round(s * 10) / 10, length: Math.round(len * 10) / 10 };
 }
 
+/**
+ * File picker filter: audio AND video (only the sound is used), plus explicit
+ * extensions, because iPhones grey out files that match only `audio/*`.
+ */
+export const ACCEPT_FILES = 'audio/*,video/*,.mp3,.m4a,.aac,.wav,.ogg,.oga,.opus,.flac,.webm,.mp4,.m4v,.mov,.3gp';
+
 /** True when the file is long enough to cut a valid clip from. */
 export const canCutClip = (totalSec: number) => totalSec >= CLIP_MIN_SEC;
 

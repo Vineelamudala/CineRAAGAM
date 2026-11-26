@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Loader2, Play, Square, Upload } from 'lucide-react';
 import { Button, Field, Input, Notice, Select, friendlyError } from './ui';
 import { useAdminDb } from '@/lib/admin/AdminProvider';
-import { CLIP_MAX_SEC, CLIP_MIN_SEC, FADE_SEC, canCutClip, clampSelection, formatSeconds, pickRecordingFormat, waveformPeaks } from '@/lib/admin/clipEncoding';
+import { ACCEPT_FILES, CLIP_MAX_SEC, CLIP_MIN_SEC, FADE_SEC, canCutClip, clampSelection, formatSeconds, pickRecordingFormat, waveformPeaks } from '@/lib/admin/clipEncoding';
 
 type Phase = 'idle' | 'decoding' | 'ready' | 'encoding' | 'uploading' | 'error';
 
@@ -72,7 +72,7 @@ export function ClipUploader({ movieId, onUploaded }: { movieId: string; onUploa
     } catch (err) {
       setBuffer(null);
       setPhase('error');
-      setError(err instanceof Error && err.message.includes('clips must') ? err.message : 'Could not read this file. Try an MP3, M4A, OGG, WAV or WebM audio file.');
+      setError(err instanceof Error && err.message.includes('clips must') ? err.message : 'Could not read the sound in this file. Try an MP3, M4A, WAV or MP4 file.');
     }
   }
 
@@ -113,6 +113,7 @@ export function ClipUploader({ movieId, onUploaded }: { movieId: string; onUploa
 
     // Re-record the selection in real time into a new file (not audible).
     const ctx = new AudioContext();
+    if (ctx.state === 'suspended') await ctx.resume(); // iPhone Safari starts audio paused
     const dest = ctx.createMediaStreamDestination();
     const src = ctx.createBufferSource();
     src.buffer = buffer;
@@ -168,8 +169,9 @@ export function ClipUploader({ movieId, onUploaded }: { movieId: string; onUploa
 
   return (
     <div className="grid gap-4 rounded-xl border border-dashed border-line p-4">
-      <Field label="Audio file" hint="Any audio file (MP3, M4A, WAV, OGG…). Only the section you choose is kept, re-encoded without any metadata.">
-        <Input type="file" accept="audio/*" disabled={busy} onChange={e => onFile(e.target.files?.[0])} aria-label="Audio file" className="h-auto py-2" />
+      <Field label="Audio or video file" hint="MP3, M4A, WAV, OGG, or a video (MP4, MOV…): only its sound is used. Only the section you choose is kept, re-encoded without any metadata.">
+        {/* Explicit extensions too: iPhones grey out files that match only a wildcard like audio/*. */}
+        <Input type="file" accept={ACCEPT_FILES} disabled={busy} onChange={e => onFile(e.target.files?.[0])} aria-label="Audio file" className="h-auto py-2" />
       </Field>
 
       {phase === 'decoding' && <p className="m-0 flex items-center gap-2 text-[12px] text-muted"><Loader2 size={14} className="animate-spin" /> Reading {fileName}…</p>}
