@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { ilikePattern } from '@/components/admin/MovieSearch';
 import { Badge, Button, Card, Field, Input, Notice, PageHeader, friendlyError } from '@/components/admin/ui';
 import { useAdminDb } from '@/lib/admin/AdminProvider';
+import { loadActiveMovies } from '@/lib/admin/catalogue';
+import { findSimilarMovies, type MovieOption } from '@/lib/search/movies';
 
 type Row = {
   id: string; title: string; release_year: number | null; is_active: boolean;
@@ -21,6 +23,8 @@ export default function AdminMoviesPage() {
   const [newTitle, setNewTitle] = useState('');
   const [newYear, setNewYear] = useState('');
   const [error, setError] = useState<string | null>(null);
+  /** Existing movies that look like the one being added; null = not checked yet. */
+  const [similar, setSimilar] = useState<MovieOption[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -43,6 +47,15 @@ export default function AdminMoviesPage() {
   async function addMovie(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!similar) {
+      try {
+        const found = findSimilarMovies(newTitle, await loadActiveMovies(db));
+        if (found.length) { setSimilar(found); return; } // ask first
+      } catch (err) {
+        setError(friendlyError(err as { code?: string; message?: string }));
+        return;
+      }
+    }
     const year = newYear ? Number(newYear) : null;
     const { data, error: insertError } = await db.from('movies')
       .insert({ title: newTitle.trim(), release_year: year })
@@ -91,10 +104,26 @@ export default function AdminMoviesPage() {
         <Card title="Add a movie">
           <form onSubmit={addMovie} className="grid gap-3">
             <p className="m-0 text-[12px] text-muted">Search first — most Telugu films are already in the catalogue.</p>
-            <Field label="Title" htmlFor="new-title"><Input id="new-title" required maxLength={200} value={newTitle} onChange={e => setNewTitle(e.target.value)} /></Field>
+            <Field label="Title" htmlFor="new-title"><Input id="new-title" required maxLength={200} value={newTitle} onChange={e => { setNewTitle(e.target.value); setSimilar(null); }} /></Field>
             <Field label="Release year" htmlFor="new-year"><Input id="new-year" type="number" min={1930} max={2100} value={newYear} onChange={e => setNewYear(e.target.value)} /></Field>
             {error && <Notice tone="bad">{error}</Notice>}
-            <Button type="submit" variant="primary" disabled={!newTitle.trim()}>Add movie</Button>
+            {similar && similar.length > 0 && (
+              <div role="alert" className="grid gap-2 rounded-lg border border-line bg-panel-2 p-3 text-[12px]">
+                <strong>Already in the catalogue under a similar spelling:</strong>
+                <ul className="m-0 grid list-none gap-1 p-0">
+                  {similar.slice(0, 8).map(m => (
+                    <li key={m.id}>
+                      <Link href={`/admin/movies/${m.id}`}>{m.title}</Link>{' '}
+                      <span className="font-mono text-[11px] text-muted">{m.year ?? ''}</span>
+                    </li>
+                  ))}
+                </ul>
+                <span className="text-muted">Open it to upload clips instead: adding the same film twice confuses players. Need another spelling? Add it as an alternate name on that movie.</span>
+              </div>
+            )}
+            <Button type="submit" variant={similar?.length ? 'ghost' : 'primary'} disabled={!newTitle.trim()}>
+              {similar?.length ? 'It’s a different film: add anyway' : 'Add movie'}
+            </Button>
           </form>
         </Card>
       </div>

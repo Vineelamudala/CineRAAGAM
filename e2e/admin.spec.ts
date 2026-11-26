@@ -37,6 +37,15 @@ test('admin adds a movie, cast and clips, schedules it, then cleans up', async (
 
   // Movie
   await page.getByRole('link', { name: /Movies & clips/ }).click();
+
+  // Another spelling of a film already in the catalogue is caught before it is added.
+  await page.getByLabel('Title').fill('Magadhira');
+  await page.getByRole('button', { name: 'Add movie' }).click();
+  const warning = page.getByRole('alert').filter({ hasText: 'Already in the catalogue' });
+  await expect(warning).toBeVisible();
+  await expect(warning.getByRole('link', { name: 'Magadheera' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /add anyway/ })).toBeVisible();
+
   await page.getByLabel('Title').fill(title);
   await page.getByLabel('Release year').fill('2024');
   await page.getByRole('button', { name: 'Add movie' }).click();
@@ -91,6 +100,40 @@ test('admin adds a movie, cast and clips, schedules it, then cleans up', async (
     await page.getByRole('button', { name: `Delete clip ${n}` }).click();
     await expect(page.getByRole('button', { name: `Play clip ${n}` })).toHaveCount(0);
   }
+  await page.getByRole('button', { name: 'Delete movie' }).click();
+  await expect(page).toHaveURL('/admin/movies');
+});
+
+test('admin merges a duplicate spelling into the right movie', async ({ page }) => {
+  page.on('dialog', d => d.accept()); // confirm() prompts
+  const stamp = Date.now();
+  const right = `Zz Merge Probe ${stamp}`;
+  const duplicate = `Zz Mergge Probe ${stamp}`; // same film, doubled letter
+
+  await login(page, E2E_ADMIN);
+  await expect(page.getByRole('heading', { name: 'Overview' })).toBeVisible();
+  await page.goto('/admin/movies');
+  await page.getByLabel('Title').fill(right);
+  await page.getByRole('button', { name: 'Add movie' }).click();
+  await expect(page.getByRole('heading', { name: right })).toBeVisible();
+
+  // Adding the other spelling warns first; the admin adds it anyway.
+  await page.goto('/admin/movies');
+  await page.getByLabel('Title').fill(duplicate);
+  await page.getByRole('button', { name: 'Add movie' }).click();
+  await expect(page.getByRole('alert').filter({ hasText: 'Already in the catalogue' }).getByRole('link', { name: right })).toBeVisible();
+  await page.getByRole('button', { name: /add anyway/ }).click();
+  await expect(page.getByRole('heading', { name: duplicate })).toBeVisible();
+
+  // From the duplicate's page, open the right movie via the Duplicates card and merge the duplicate into it.
+  await page.getByRole('list', { name: 'Possible duplicates' }).getByRole('link', { name: right }).click();
+  await expect(page.getByRole('heading', { name: right })).toBeVisible();
+  await page.getByRole('button', { name: `Merge ${duplicate} into this movie` }).click();
+  await expect(page.getByText(`Merged "${duplicate}" into this movie.`)).toBeVisible();
+  await expect(page.getByLabel('Other names (comma separated)')).toHaveValue(duplicate);
+  await expect(page.getByText('No other spellings of this title found.')).toBeVisible();
+
+  // Cleanup
   await page.getByRole('button', { name: 'Delete movie' }).click();
   await expect(page).toHaveURL('/admin/movies');
 });

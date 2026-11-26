@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react';
 import { AudioPreview } from '@/components/admin/AudioPreview';
 import { ClipUploader } from '@/components/admin/ClipUploader';
+import { DuplicatesCard } from '@/components/admin/DuplicatesCard';
 import { Badge, Button, Card, Field, Input, Notice, PageHeader, friendlyError } from '@/components/admin/ui';
 import { useAdminDb } from '@/lib/admin/AdminProvider';
 
@@ -102,8 +103,12 @@ export default function AdminMoviePage({ params }: { params: Promise<{ id: strin
   }
 
   async function deleteMovie() {
-    if (!confirm('Delete this movie from the catalogue? Movies with clips or challenges cannot be deleted — deactivate them instead.')) return;
+    if (!confirm('Delete this movie from the catalogue?')) return;
     const { error } = await db.from('movies').delete().eq('id', id);
+    if (error?.code === '23503') {
+      setMsg({ tone: 'bad', text: 'This movie can’t be deleted: it has clips or a challenge, or players have already guessed it. If it’s a duplicate, open the right movie and use “Merge into this movie” (players keep their credit). Or untick Active to hide it.' });
+      return;
+    }
     if (error) { setMsg({ tone: 'bad', text: friendlyError(error) }); return; }
     router.push('/admin/movies');
   }
@@ -127,7 +132,7 @@ export default function AdminMoviePage({ params }: { params: Promise<{ id: strin
       <div className="grid gap-6 lg:grid-cols-2">
         <Card title="Details">
           <form onSubmit={save} className="grid gap-3">
-            <Field label="Title (what players type and see)" htmlFor="m-title">
+            <Field label="Title (what players type and see)" htmlFor="m-title" hint="Rename here, then Save details. Put other spellings under Other names so players still find it.">
               <Input id="m-title" required maxLength={200} value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
             </Field>
             <div className="grid grid-cols-2 gap-3">
@@ -189,6 +194,16 @@ export default function AdminMoviePage({ params }: { params: Promise<{ id: strin
         )}
         <ClipUploader movieId={id} onUploaded={() => { setMsg({ tone: 'good', text: 'Clip saved.' }); reload(); }} />
       </Card>
+
+      <DuplicatesCard
+        movie={movie}
+        onMerged={text => {
+          setMsg({ tone: 'good', text });
+          setForm(f => ({ ...f, title: '' })); // refill the form with the new other names
+          reload();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+      />
     </>
   );
 }
