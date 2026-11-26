@@ -19,11 +19,16 @@ test('clue audio is served via /api/clip with CDN caching, and locked clues stay
   expect(res.status()).toBe(200);
   expect(res.headers()['content-type']).toMatch(/^audio\//);
   expect(res.headers()['cache-control']).toContain('public');
-  expect(res.headers()['cache-control']).toContain('s-maxage');
+  // Vercel's CDN consumes s-maxage and strips it from what the browser sees, but says it cached the file.
+  if (res.headers()['x-vercel-cache']) expect(res.headers()['x-vercel-cache']).toMatch(/HIT|MISS|STALE|PRERENDER/);
+  else expect(res.headers()['cache-control']).toContain('s-maxage');
   expect(res.headers()['set-cookie']).toBeUndefined(); // cookies would block CDN caching
 
+  // A unique query string skips any CDN copy left by earlier tests, so the server really decides.
+  const fresh = (path: string) => `/api/clip/${path}?check=${Date.now()}-${Math.random()}`;
+
   // Clue 2 is locked for this new player — even knowing the exact file name.
-  const locked = await page.request.get(`/api/clip/${medium.storage_path}`);
+  const locked = await page.request.get(fresh(medium.storage_path));
   expect(locked.status()).toBe(404);
   expect(locked.headers()['cache-control']).toBe('no-store');
 
@@ -33,6 +38,6 @@ test('clue audio is served via /api/clip with CDN caching, and locked clues stay
   // After skipping clue 1, clue 2 becomes available to this player.
   await page.getByRole('button', { name: /Skip this clue/ }).click();
   await expect(page.locator('.clue-badge')).toContainText('Medium');
-  const unlocked = await page.request.get(`/api/clip/${medium.storage_path}`);
+  const unlocked = await page.request.get(fresh(medium.storage_path));
   expect(unlocked.status()).toBe(200);
 });
