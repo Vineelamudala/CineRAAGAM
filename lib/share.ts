@@ -29,8 +29,12 @@ export function buildShareText(opts: {
         ? `I named today’s movie on the very first clue! ${pts} 🎯`
         : `I cracked today’s movie on clue ${clue}/${TOTAL_CLUES} · ${pts} 🎬`;
   const streakLine = !timeTravel && streak && streak > 1 ? `🔥 ${streak}-day streak` : undefined;
-  const invite = solved ? 'Think you can beat me? 👇' : 'Can you guess it? 👇';
-  return [`🎵 Cineraagam #${challengeNumber}`, squares, headline, streakLine, invite, url].filter(Boolean).join('\n');
+  // A challenge that makes sense for the result: nobody can beat a first-clue solve, only match it.
+  const invite = !solved ? 'Can you guess it? 👇'
+    : timeTravel ? 'Can you crack it? 👇'
+    : clue === 1 ? 'Can you match that? 👇'
+    : 'Can you get it in fewer clues? 👇';
+  return [`🎵 Cineraagam #${challengeNumber}`, squares, headline, streakLine, invite, url, '#Cineraagam'].filter(Boolean).join('\n');
 }
 
 /**

@@ -2,14 +2,23 @@ import { describe, expect, it } from 'vitest';
 import { buildShareText, shareLinks } from './share';
 
 describe('buildShareText', () => {
-  it('shows per-clue results, points and a challenge to friends for a win', () => {
+  it('shows per-clue results, points, a fitting challenge and the hashtag for a win', () => {
     expect(buildShareText({ challengeNumber: 3, results: ['wrong', 'correct'], points: 2, url: 'https://cineraagam.vercel.app' })).toBe(
-      '🎵 Cineraagam #3\n🟥🟩⬜\nI cracked today’s movie on clue 2/3 · 2 points 🎬\nThink you can beat me? 👇\nhttps://cineraagam.vercel.app',
+      '🎵 Cineraagam #3\n🟥🟩⬜\nI cracked today’s movie on clue 2/3 · 2 points 🎬\nCan you get it in fewer clues? 👇\nhttps://cineraagam.vercel.app\n#Cineraagam',
     );
   });
 
-  it('celebrates a first-clue solve', () => {
-    expect(buildShareText({ challengeNumber: 7, results: ['correct'], points: 3 })).toContain('I named today’s movie on the very first clue! 3 points 🎯');
+  it('celebrates a first-clue solve and asks friends to match it (it cannot be beaten)', () => {
+    const text = buildShareText({ challengeNumber: 7, results: ['correct'], points: 3 });
+    expect(text).toContain('I named today’s movie on the very first clue! 3 points 🎯');
+    expect(text).toContain('Can you match that? 👇');
+    expect(text).not.toMatch(/beat|fewer/);
+  });
+
+  it('always ends with #Cineraagam', () => {
+    for (const results of [['correct'], ['wrong', 'wrong', 'skipped'], ['skipped', 'correct']] as const) {
+      expect(buildShareText({ challengeNumber: 2, results: [...results], points: 0, url: 'https://x.org' }).endsWith('\n#Cineraagam')).toBe(true);
+    }
   });
 
   it('uses singular "point" for a third-clue solve', () => {
@@ -18,7 +27,7 @@ describe('buildShareText', () => {
 
   it('handles a loss', () => {
     expect(buildShareText({ challengeNumber: 3, results: ['wrong', 'skipped', 'wrong'], points: 0, url: 'https://example.org' })).toBe(
-      '🎵 Cineraagam #3\n🟥⬛🟥\nToday’s movie stumped me 😅\nCan you guess it? 👇\nhttps://example.org',
+      '🎵 Cineraagam #3\n🟥⬛🟥\nToday’s movie stumped me 😅\nCan you guess it? 👇\nhttps://example.org\n#Cineraagam',
     );
   });
 
@@ -30,6 +39,7 @@ describe('buildShareText', () => {
   it('never mentions points or streaks for Time Travel games', () => {
     const text = buildShareText({ challengeNumber: 5, results: ['wrong', 'correct'], points: 0, streak: 9, timeTravel: true });
     expect(text).toContain('I cracked this Time Travel movie on clue 2/3 🎬');
+    expect(text).toContain('Can you crack it? 👇');
     expect(text).not.toMatch(/point|streak/);
     expect(buildShareText({ challengeNumber: 5, results: ['wrong', 'skipped', 'wrong'], points: 0, timeTravel: true })).toContain('This Time Travel movie stumped me 😅');
   });
