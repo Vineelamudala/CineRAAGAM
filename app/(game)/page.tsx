@@ -19,7 +19,8 @@ export default function TodayPage() {
     <>
       <section className="welcome-row">
         <div>
-          <div className="eyebrow"><span className="eyebrow-line" aria-hidden="true" /> THE DAILY TELUGU MUSIC CHALLENGE</div>
+          {/* The brand name in the page's main text helps search engines link "Cineraagam" to this site. */}
+          <div className="eyebrow"><span className="eyebrow-line" aria-hidden="true" /> CINERAAGAM · THE DAILY TELUGU MUSIC CHALLENGE</div>
           <h1>Hear it. <em>Feel it.</em><br />Name that movie.</h1>
           <p className="welcome-copy">Three music clues. One Telugu movie. How well do you know your cinema?</p>
         </div>
