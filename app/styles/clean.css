@@ -202,6 +202,43 @@ ol.clip-progress { padding: 12px 14px; margin-top: 18px; }
 
 .guess-history li.is-correct { border-color: #24452f; color: #9ed9b0; background: #0f1a13; }
 
+/* "Add your name to appear on the leaderboard" prompt */
+.name-prompt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid #5a4b22;
+  background: #1d1a10;
+  text-align: left;
+}
+.name-prompt-icon { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #c9a43a; color: #1a1406; }
+.name-prompt-text { flex: 1; font-size: 13px; line-height: 1.45; color: #f3e3b4; }
+.name-prompt-button {
+  flex: none;
+  height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: #f3d58a;
+  color: #1a1406;
+  font: 700 12px var(--font-dm-sans), system-ui, sans-serif;
+  cursor: pointer;
+}
+.name-prompt-button:hover { filter: brightness(1.06); }
+@media (max-width: 480px) {
+  .name-prompt { flex-wrap: wrap; }
+  .name-prompt-text { flex-basis: calc(100% - 42px); }
+  .name-prompt-button { width: 100%; }
+}
+
+/* Same chips in the admin "Who played" page */
+.guess-history-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 11px; border: 1px solid #3a2a2d; color: #e3a8ad; background: #1a1012; }
+.guess-history-chip.is-skipped { border-color: #3d3520; color: #d8c27f; background: #17140b; }
+.guess-history-chip.is-correct { border-color: #24452f; color: #9ed9b0; background: #0f1a13; }
+
 /* ---- Reveal: clean result screen ---- */
 .reveal-panel.reveal-clean { min-height: 0; padding: 30px 8px 18px; }
 .reveal-clean .reveal-eyebrow {
@@ -274,7 +311,7 @@ ol.clip-progress { padding: 12px 14px; margin-top: 18px; }
 @media (max-width: 620px) {
   .welcome-row { padding: 18px 0 14px; }
   .welcome-row h1 { font-size: 30px; margin: 10px 0 8px; }
-  .welcome-copy { display: none; }
+  .welcome-copy { font-size: 13px; line-height: 1.55; max-width: none; }
 
   /* Countdown as one slim row */
   .countdown-card { margin-top: 14px; padding: 11px 14px; }

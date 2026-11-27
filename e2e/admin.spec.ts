@@ -145,6 +145,24 @@ test('admin merges a duplicate spelling into the right movie', async ({ page }) 
   await expect(page).toHaveURL('/admin/movies');
 });
 
+test('admin sees who played today and what they guessed', async ({ page, browser }) => {
+  // A player skips clue 1 today, so there is at least one play to report.
+  const player = await (await browser.newContext()).newPage();
+  await player.goto('/');
+  await player.getByRole('dialog').getByRole('button', { name: 'Maybe later' }).click();
+  await player.getByRole('button', { name: /Skip this clue/ }).click();
+  await expect(player.locator('.clue-badge')).toContainText('Medium');
+
+  await login(page, E2E_ADMIN);
+  await expect(page.getByRole('heading', { name: 'Overview' })).toBeVisible();
+  await page.getByRole('link', { name: /Who played/ }).click();
+  await expect(page.getByRole('heading', { name: 'Who played' })).toBeVisible();
+  await expect(page.getByText(new RegExp(process.env.E2E_ANSWER_TITLE!)).first()).toBeVisible();
+  const plays = page.getByRole('list', { name: 'Plays' });
+  await expect(plays.getByText('Clue 1: skipped').first()).toBeVisible();
+  await expect(plays.getByText(/^Guest [0-9a-f]{6}$/).first()).toBeVisible();
+});
+
 test('2-step verification: set up, required at sign-in, then turned off', async ({ page, browser }) => {
   test.setTimeout(90_000);
   page.on('dialog', d => d.accept());

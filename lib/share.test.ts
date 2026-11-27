@@ -2,19 +2,23 @@ import { describe, expect, it } from 'vitest';
 import { buildShareText, shareLinks } from './share';
 
 describe('buildShareText', () => {
-  it('shows per-clue results and points for a win', () => {
-    expect(buildShareText({ challengeNumber: 24, results: ['wrong', 'correct'], points: 2 })).toBe(
-      '🎵 Cineraagam #24\n🟥🟩⬜\nSolved on clue 2/3 · 2 points',
+  it('shows per-clue results, points and a challenge to friends for a win', () => {
+    expect(buildShareText({ challengeNumber: 3, results: ['wrong', 'correct'], points: 2, url: 'https://cineraagam.vercel.app' })).toBe(
+      '🎵 Cineraagam #3\n🟥🟩⬜\nI cracked today’s movie on clue 2/3 · 2 points 🎬\nThink you can beat me? 👇\nhttps://cineraagam.vercel.app',
     );
   });
 
+  it('celebrates a first-clue solve', () => {
+    expect(buildShareText({ challengeNumber: 7, results: ['correct'], points: 3 })).toContain('I named today’s movie on the very first clue! 3 points 🎯');
+  });
+
   it('uses singular "point" for a third-clue solve', () => {
-    expect(buildShareText({ challengeNumber: 1, results: ['skipped', 'wrong', 'correct'], points: 1 })).toContain('1 point');
+    expect(buildShareText({ challengeNumber: 1, results: ['skipped', 'wrong', 'correct'], points: 1 })).toContain('clue 3/3 · 1 point 🎬');
   });
 
   it('handles a loss', () => {
     expect(buildShareText({ challengeNumber: 3, results: ['wrong', 'skipped', 'wrong'], points: 0, url: 'https://example.org' })).toBe(
-      '🎵 Cineraagam #3\n🟥⬛🟥\nNot solved today · 0 points\nhttps://example.org',
+      '🎵 Cineraagam #3\n🟥⬛🟥\nToday’s movie stumped me 😅\nCan you guess it? 👇\nhttps://example.org',
     );
   });
 
@@ -25,9 +29,9 @@ describe('buildShareText', () => {
 
   it('never mentions points or streaks for Time Travel games', () => {
     const text = buildShareText({ challengeNumber: 5, results: ['wrong', 'correct'], points: 0, streak: 9, timeTravel: true });
-    expect(text).toContain('Solved on clue 2/3 · Time Travel');
+    expect(text).toContain('I cracked this Time Travel movie on clue 2/3 🎬');
     expect(text).not.toMatch(/point|streak/);
-    expect(buildShareText({ challengeNumber: 5, results: ['wrong', 'skipped', 'wrong'], points: 0, timeTravel: true })).toContain('Not solved · Time Travel');
+    expect(buildShareText({ challengeNumber: 5, results: ['wrong', 'skipped', 'wrong'], points: 0, timeTravel: true })).toContain('This Time Travel movie stumped me 😅');
   });
 
   it('builds X, WhatsApp and Facebook share links', () => {

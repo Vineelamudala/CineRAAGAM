@@ -47,6 +47,12 @@ export type MyStats = {
   total_points: number;
   week_points: number;
   week_rank: number | null;
+  /** Number of ranked players this week / all time. */
+  week_ranked?: number;
+  all_rank?: number | null;
+  all_ranked?: number;
+  /** Why there is no rank: admin account, no display name, hidden by an admin, or no wins yet. */
+  rank_note?: 'admin' | 'no_name' | 'hidden' | 'no_points' | null;
   distribution: { '1': number; '2': number; '3': number; missed: number };
   week: { date: string; is_today: boolean; has_challenge: boolean; status: 'playing' | 'won' | 'lost' | null }[];
 };

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ChartNoAxesColumn, Check, Film, MessageCircle, Share2, SkipForward, X } from 'lucide-react';
+import { NamePrompt } from '@/components/NamePrompt';
 import type { ChallengeState } from '@/lib/game/api';
 import { useStats } from '@/lib/player/StatsProvider';
 import { buildShareText, shareLinks } from '@/lib/share';
@@ -75,6 +76,12 @@ export function RevealPanel({ state }: Props) {
           </li>
         ))}
       </ul>
+
+      {play.mode === 'daily' && (
+        <div className="mb-4 w-full max-w-[460px]">
+          <NamePrompt text={won ? `Add your display name to put your ${points} ${points === 1 ? 'point' : 'points'} on the leaderboard.` : undefined} />
+        </div>
+      )}
 
       <div className="reveal-actions">
         <button className="share-button" onClick={share}><Share2 size={16} aria-hidden="true" /> SHARE RESULT</button>

@@ -3,13 +3,14 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { AudioLines, CalendarRange, Film, LayoutDashboard, Loader2, LogOut, ShieldCheck, Users } from 'lucide-react';
+import { AudioLines, CalendarRange, Film, LayoutDashboard, ListChecks, Loader2, LogOut, ShieldCheck, Users } from 'lucide-react';
 import { useAdmin } from '@/lib/admin/AdminProvider';
 
 const NAV = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },
   { href: '/admin/challenges', label: 'Schedule', icon: CalendarRange },
   { href: '/admin/movies', label: 'Movies & clips', icon: Film },
+  { href: '/admin/plays', label: 'Who played', icon: ListChecks },
   { href: '/admin/players', label: 'Players', icon: Users },
   { href: '/admin/security', label: 'Security', icon: ShieldCheck },
 ];

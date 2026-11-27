@@ -48,6 +48,12 @@ test('solving today updates streak, stats, leaderboard and history', async ({ pa
   await expect(tile('Win rate')).toContainText('100%');
   await expect(tile('Avg clues to solve')).toContainText('1');
   await expect(tile('Total points')).toContainText('3');
+  // Your rank: this week and all time, with the number of ranked players
+  const rank = page.getByRole('region', { name: 'Your rank' });
+  await expect(rank.getByText('This week')).toBeVisible();
+  await expect(rank.getByText('All time')).toBeVisible();
+  await expect(rank.getByText(/^#\d+$/)).toHaveCount(2);
+  await expect(rank.getByText(/^of \d+ players?$/).first()).toBeVisible();
   await expect(tile('Average points')).toContainText('3');
   await expect(page.getByLabel('Solved on clue 1: 1 game, 100%')).toBeVisible();
   // Daily history (same page): today shows the movie, result and points
@@ -115,6 +121,20 @@ test('share buttons: X, WhatsApp and Facebook with a spoiler-free message', asyn
   expect(message).toContain('🎵 Cineraagam #');
   expect(message).toContain('⬛⬛⬛'); // three skipped clues
   expect(message.toLowerCase()).not.toContain(ANSWER.toLowerCase()); // never spoils the answer
+});
+
+test('after the game, an unnamed player can add a name right from the result', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('dialog').getByRole('button', { name: 'Maybe later' }).click();
+  await solveTodayOnClue1(page);
+  await page.getByRole('dialog', { name: 'Statistics' }).getByRole('button', { name: 'Close' }).click();
+  const prompt = page.locator('.reveal-panel .name-prompt');
+  await expect(prompt).toContainText('put your 3 points on the leaderboard');
+  await prompt.getByRole('button', { name: 'Add my name' }).click();
+  await page.getByLabel('Display name', { exact: true }).fill(`Named ${Math.random().toString(36).slice(2, 7)}`);
+  await page.getByRole('button', { name: /LET’S PLAY/ }).click();
+  await expect(page.getByRole('dialog')).toBeHidden();
+  await expect(prompt).toHaveCount(0);
 });
 
 test('players without a name are told how to join the leaderboard', async ({ page }) => {

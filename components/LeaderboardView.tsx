@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Trophy } from 'lucide-react';
 import { getLeaderboard, type Leaderboard, type LeaderboardPeriod } from '@/lib/game/api';
 import { usePlayer } from '@/lib/player/PlayerProvider';
+import { useStats } from '@/lib/player/StatsProvider';
 import { getBrowserSupabase } from '@/lib/supabase/browser';
 
 const TABS: { id: LeaderboardPeriod; label: string; hint: string }[] = [
@@ -16,6 +17,7 @@ const fmt = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en
 
 export function LeaderboardView() {
   const player = usePlayer();
+  const { stats } = useStats();
   const [period, setPeriod] = useState<LeaderboardPeriod>('week');
   const [data, setData] = useState<Partial<Record<LeaderboardPeriod, Leaderboard>>>({});
   const [failed, setFailed] = useState(false);
@@ -96,8 +98,13 @@ export function LeaderboardView() {
           <p className="m-0 mt-4 rounded-lg border border-line bg-panel-2 px-4 py-3 text-[12px]">
             {board.me
               ? <>You’re <strong>#{board.me.rank}</strong> with {board.me.points} {board.me.points === 1 ? 'point' : 'points'} ({board.me.solved} {board.me.solved === 1 ? 'day' : 'days'} solved).</>
+              : stats?.rank_note === 'admin'
+                ? <>This browser is signed in to the <strong>admin account</strong>. Admin games are never ranked (the admin knows the answers). To appear here, play in a browser or device that isn’t signed in to the admin area.</>
               : !player.displayName
-                ? <>Choose a display name (profile icon, top right) and solve a daily challenge to appear here.</>
+                ? <>
+                    Choose a display name and solve a daily challenge to appear here.{' '}
+                    <button type="button" onClick={player.openNameEditor} className="cursor-pointer border-0 bg-transparent p-0 text-[12px] font-semibold text-text underline">Add my name</button>
+                  </>
                 : <>Solve a daily challenge {period === 'all' ? '' : `this ${period} `}to appear here. <Link href="/" className="text-text">Play today ↗</Link></>}
           </p>
         )}

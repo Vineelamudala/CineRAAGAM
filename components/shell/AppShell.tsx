@@ -16,14 +16,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isMobile = useMediaQuery('(max-width: 620px)');
   const player = usePlayer();
-  const { stats, openStats } = useStats();
+  const { stats, openStats, refresh: refreshStats } = useStats();
   const [menuOpen, setMenuOpen] = useState(false);
   // "Maybe later" lasts for the browser session (the dialog only renders on the
   // client after the session loads, so this doesn't affect server rendering).
   const [nameDismissed, setNameDismissed] = useState(() => {
     try { return typeof window !== 'undefined' && window.sessionStorage.getItem(DISMISS_KEY) === '1'; } catch { return false; }
   });
-  const [editingName, setEditingName] = useState(false);
+  const editingName = player.nameEditorOpen;
   const closeMenuRef = useRef<HTMLButtonElement>(null);
   const openMenuRef = useRef<HTMLButtonElement>(null);
 
@@ -67,7 +67,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       <div className="main-area" inert={isMobile && menuOpen}>
-        <Topbar pathname={pathname} streak={stats?.current_streak ?? null} onOpenStats={() => openStats()} onOpenMenu={() => setMenuOpen(true)} onOpenProfile={() => setEditingName(true)} menuRef={openMenuRef} />
+        <Topbar pathname={pathname} streak={stats?.current_streak ?? null} onOpenStats={() => openStats()} onOpenMenu={() => setMenuOpen(true)} onOpenProfile={player.openNameEditor} menuRef={openMenuRef} />
         {player.status === 'error' && (
           <div role="alert" className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-[#4a2a33] bg-[#1a0f13] px-4 py-3 text-[12px] text-[#f2c4cb]">
             <span>We couldn’t connect to the Cineraagam server. Your progress won’t be saved until we reconnect.</span>
@@ -88,12 +88,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           initialName={player.displayName ?? ''}
           onSave={async value => {
             const error = await player.saveDisplayName(value);
-            if (!error) setEditingName(false);
+            if (!error) {
+              player.closeNameEditor();
+              refreshStats(); // a name makes the player rankable
+            }
             return error;
           }}
           onClose={() => {
             setNameDismissed(true);
-            setEditingName(false);
+            player.closeNameEditor();
             try { window.sessionStorage.setItem(DISMISS_KEY, '1'); } catch { /* storage blocked: dismiss for this page only */ }
           }}
         />

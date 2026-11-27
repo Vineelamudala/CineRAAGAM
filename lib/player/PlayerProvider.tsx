@@ -14,6 +14,10 @@ type PlayerContextValue = {
   /** Saves the display name on the server. Resolves to an error message, or null on success. */
   saveDisplayName: (name: string) => Promise<string | null>;
   retry: () => void;
+  /** The "choose a display name" dialog, openable from anywhere (profile icon, prompts). */
+  nameEditorOpen: boolean;
+  openNameEditor: () => void;
+  closeNameEditor: () => void;
 };
 
 const PlayerContext = createContext<PlayerContextValue | null>(null);
@@ -83,7 +87,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     setAttempt(a => a + 1);
   }, []);
 
-  const value = useMemo(() => ({ ...state, saveDisplayName, retry }), [state, saveDisplayName, retry]);
+  const [nameEditorOpen, setNameEditorOpen] = useState(false);
+  const openNameEditor = useCallback(() => setNameEditorOpen(true), []);
+  const closeNameEditor = useCallback(() => setNameEditorOpen(false), []);
+
+  const value = useMemo(
+    () => ({ ...state, saveDisplayName, retry, nameEditorOpen, openNameEditor, closeNameEditor }),
+    [state, saveDisplayName, retry, nameEditorOpen, openNameEditor, closeNameEditor],
+  );
   return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>;
 }
 

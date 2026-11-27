@@ -19,13 +19,18 @@ export function buildShareText(opts: {
   const { challengeNumber, results, points, streak, timeTravel = false, url } = opts;
   const squares = Array.from({ length: TOTAL_CLUES }, (_, i) => (results[i] ? MARK[results[i]] : UNUSED)).join('');
   const solved = results.includes('correct');
+  const clue = results.length;
+  const pts = `${points} ${points === 1 ? 'point' : 'points'}`;
   const headline = timeTravel
-    ? solved ? `Solved on clue ${results.length}/${TOTAL_CLUES} · Time Travel` : 'Not solved · Time Travel'
-    : solved
-      ? `Solved on clue ${results.length}/${TOTAL_CLUES} · ${points} ${points === 1 ? 'point' : 'points'}`
-      : 'Not solved today · 0 points';
+    ? solved ? `I cracked this Time Travel movie on clue ${clue}/${TOTAL_CLUES} 🎬` : 'This Time Travel movie stumped me 😅'
+    : !solved
+      ? 'Today’s movie stumped me 😅'
+      : clue === 1
+        ? `I named today’s movie on the very first clue! ${pts} 🎯`
+        : `I cracked today’s movie on clue ${clue}/${TOTAL_CLUES} · ${pts} 🎬`;
   const streakLine = !timeTravel && streak && streak > 1 ? `🔥 ${streak}-day streak` : undefined;
-  return [`🎵 Cineraagam #${challengeNumber}`, squares, headline, streakLine, url].filter(Boolean).join('\n');
+  const invite = solved ? 'Think you can beat me? 👇' : 'Can you guess it? 👇';
+  return [`🎵 Cineraagam #${challengeNumber}`, squares, headline, streakLine, invite, url].filter(Boolean).join('\n');
 }
 
 /**
